@@ -1,0 +1,80 @@
+name: coffeeapp
+description: "Coffee App"
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  avatar_plus: ^0.0.5
+  google_nav_bar: ^5.0.7
+  banner_image: ^1.0.9
+  intl: ^0.20.2
+  logger: ^2.5.0
+  flutter_rating_stars: ^1.1.0
+  provider: ^6.1.5
+  video_player: ^2.9.5
+  package_info_plus: ^8.3.0
+  sqflite: ^2.4.2
+  path_provider: ^2.1.5
+  http: ^1.4.0
+  sqflite_common_ffi: ^2.3.5
+  path: ^1.9.1
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.4
+  cloud_firestore: ^5.6.8
+  flutter_slidable: ^4.0.0
+  animate_gradient: ^0.0.3
+  lottie: ^3.3.1
+  syncfusion_flutter_charts: ^29.2.9
+  fl_chart: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/banner/firstBanner.jpg
+    - assets/images/banner/secondbanner.jpg
+    - assets/images/banner/thirdbanner.jpg
+    - assets/images/drink/lemontea.jpg
+    - assets/images/drink/product2.jpg
+    - assets/images/drink/product3.jpg
+    - assets/images/drink/product4.jpg
+    - assets/images/drink/product5.png
+    - assets/images/drink/product6.jpg
+    - assets/images/drink/product7.jpg
+    - assets/images/drink/product8.jpg
+    - assets/images/drink/product9.jpg
+    - assets/images/drink/product10.jpg
+    - assets/images/drink/product11.jpg
+    - assets/images/drink/category1.jpg
+    - assets/images/drink/category2.jpg
+    - assets/images/drink/category3.jpg
+    - assets/images/drink/category4.jpg
+    - assets/images/drink/category5.jpg
+    - assets/images/drink/category6.jpg
+    - assets/images/drink/category7.jpg
+    - assets/images/drink/PlaceholderProductImage.jpg
+    - assets/images/drink/user.png
+    - assets/video/istockphoto-1439347335-640_adpp_is.mp4
+    - assets/background/anime-coffee-shop-illustration.jpg
+    - assets/images/rank/r0.png
+    - assets/images/rank/r1.png
+    - assets/images/rank/r2.png
+    - assets/images/rank/r3.png
+    - assets/images/rank/r4.png
+    - assets/images/rank/r5.png
+    - assets/background/coffeeproductbackground.jpg
+    - assets/video/icons8-add-shopping-cart.gif
+    - assets/video/icons8-shopping-cart.gif
+    - assets/video/CoffeeFavourite.json
+    - assets/video/CoffeeRecommended.json
+    - assets/background/CoffeeTitle.json
+    - assets/background/loading.json
