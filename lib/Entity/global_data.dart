@@ -15,13 +15,15 @@ class GlobalData {
 
   // userDetail
   static UserDetail _userDetail = UserDetail(
-    displayName: '',
+    uid: '',
+    username: '',
     email: '',
-    password: '',
-    photoURL: '',
-    rank: '',
+    photoURL: 'assets/images/drink/user.png',
+    rank: 'Hạng đồng',
     point: 0,
+    role: 'user',
   );
+
 
   // Getter
   static UserDetail get userDetail => _userDetail;

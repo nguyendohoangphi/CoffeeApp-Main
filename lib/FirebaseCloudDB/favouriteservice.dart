@@ -50,4 +50,25 @@ class FavouriteService {
         )
         .toList();
   }
+
+  // Toggle favourite (auto add/remove)
+  Future<void> toggleFavourite(String email, String productName) async {
+    try {
+      final docRef = _favRef.doc(_docId(email, productName));
+      final doc = await docRef.get();
+
+      if (doc.exists) {
+        // Nếu đã tồn tại thì xoá (bỏ thích)
+        await docRef.delete();
+      } else {
+        // Nếu chưa tồn tại thì thêm mới
+        await docRef.set({
+          'email': email,
+          'productName': productName,
+        });
+      }
+    } catch (e) {
+      throw Exception('Failed to toggle favourite: $e');
+    }
+  }
 }

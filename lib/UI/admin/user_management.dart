@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffeeapp/Entity/userdetail.dart';
 import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
 import 'package:coffeeapp/UI/admin/UserFormPage.dart';
@@ -14,74 +15,97 @@ class UserManagementPage extends StatefulWidget {
 
 class _UserManagementPageState extends State<UserManagementPage> {
   late List<UserDetail> users = [];
-
-  late Future<void> _loadDataFuture;
   late List<UserDetail> filteredUsers = [];
-  Future<void> LoadData() async {
-    users = await FirebaseDBManager.authService.getAllUsers();
-    filteredUsers = searchText.isEmpty
-        ? users
-        : users
-              .where(
-                (u) =>
-                    u.displayName.toLowerCase().contains(
-                      searchText.toLowerCase(),
-                    ) ||
-                    u.email.toLowerCase().contains(searchText.toLowerCase()),
-              )
-              .toList();
-  }
+  late Future<void> _loadDataFuture;
+
+  String searchText = "";
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _loadDataFuture = LoadData();
   }
 
-  String searchText = "";
+  // ------------------------------ LOAD USER DATA ----------------------------------
+  Future<void> LoadData() async {
+    users = await FirebaseDBManager.authService.getAllUsers();
 
-  Future<void> _deleteUser(String email) async {
-    setState(() {
-      users.removeWhere((user) => user.email == email);
-    });
-    await FirebaseDBManager.authService.deleteUserByEmail(email);
+    filteredUsers = searchText.isEmpty
+        ? users
+        : users
+        .where((u) =>
+    u.username.toLowerCase().contains(searchText.toLowerCase()) ||
+        u.email.toLowerCase().contains(searchText.toLowerCase()))
+        .toList();
   }
 
+  // ------------------------------ DELETE USER ----------------------------------
+  Future<void> _deleteUser(UserDetail user) async {
+    // Xóa Firestore theo UID
+    await FirebaseFirestore.instance
+        .collection("UserDetail")
+        .doc(user.uid)
+        .delete();
+
+    // Xóa khỏi danh sách
+    setState(() {
+      users.removeWhere((u) => u.uid == user.uid);
+      filteredUsers.removeWhere((u) => u.uid == user.uid);
+    });
+  }
+
+  // ------------------------------ ADD USER ----------------------------------
   void _navigateToAdd() async {
     final newUser = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const UserFormPage()),
     );
+
     if (newUser != null) {
-      setState(() => users.add(newUser));
-      await FirebaseDBManager.authService.registerWithEmail(user: newUser);
+      // Gọi AuthService.register
+      await FirebaseDBManager.authService.register(
+        username: newUser.username,
+        email: newUser.email,
+        password: newUser.password!,
+      );
+
+      // Reload data
+      setState(() {
+        _loadDataFuture = LoadData();
+      });
     }
   }
 
+  // ------------------------------ EDIT USER ----------------------------------
   void _navigateToEdit(UserDetail user) async {
     final updatedUser = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => UserFormPage(user: user)),
     );
-    if (updatedUser != null) {
-      final index = users.indexWhere((u) => u.email == updatedUser.email);
 
-      setState(() {
-        if (index != -1) users[index] = updatedUser;
-      });
-      await FirebaseDBManager.authService.updateUserPointAndRank(
-        users[index].email,
-        users[index].point,
-        users[index].rank,
-      );
-      await FirebaseDBManager.authService.updateUserPasswordInFirestore(
-        users[index].email,
-        users[index].password,
-      );
+    if (updatedUser != null) {
+      final index = users.indexWhere((u) => u.uid == updatedUser.uid);
+
+      if (index != -1) {
+        setState(() {
+          users[index] = updatedUser;
+        });
+
+        // Update rank + point
+        await FirebaseDBManager.authService.updateUserPointAndRank(
+          updatedUser.uid,
+          updatedUser.point,
+          updatedUser.rank,
+        );
+
+        setState(() {
+          _loadDataFuture = LoadData();
+        });
+      }
     }
   }
 
+  // ------------------------------ UI BUILD ----------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +122,22 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 filled: true,
                 fillColor: Colors.white,
               ),
-              onChanged: (value) => setState(() => searchText = value),
+              onChanged: (value) {
+                setState(() {
+                  searchText = value;
+                  filteredUsers = users
+                      .where(
+                        (u) =>
+                    u.username
+                        .toLowerCase()
+                        .contains(value.toLowerCase()) ||
+                        u.email
+                            .toLowerCase()
+                            .contains(value.toLowerCase()),
+                  )
+                      .toList();
+                });
+              },
             ),
           ),
         ),
@@ -115,9 +154,9 @@ class _UserManagementPageState extends State<UserManagementPage> {
               itemBuilder: (context, index) {
                 final user = filteredUsers[index];
                 return Dismissible(
-                  key: Key(user.email),
+                  key: Key(user.uid),
                   direction: DismissDirection.endToStart,
-                  onDismissed: (_) => _deleteUser(user.email),
+                  onDismissed: (_) => _deleteUser(user),
                   background: Container(
                     alignment: Alignment.centerRight,
                     color: Colors.red,
@@ -128,8 +167,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
                     leading: CircleAvatar(
                       backgroundImage: AssetImage(user.photoURL),
                     ),
-                    title: Text(user.displayName),
-                    subtitle: Text('${user.email} - ${user.rank}'),
+                    title: Text(user.username),
+                    subtitle: Text("${user.email} - ${user.rank}"),
                     onTap: () => _navigateToEdit(user),
                   ),
                 );

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:animate_gradient/animate_gradient.dart';
 import 'package:coffeeapp/CustomCard/colorsetupbackground.dart';
@@ -90,9 +91,8 @@ class _UserInformationState extends State<UserInformation> {
     drinkList = [];
     coupons = [];
 
-    GlobalData.userDetail = (await FirebaseDBManager.authService.getUserDetail(
-      GlobalData.userDetail.email,
-    ))!;
+    GlobalData.userDetail = (await FirebaseDBManager.authService.getProfile())!;
+
 
     Coupon coupon = await FirebaseDBManager.couponService.getCoupon(
       GlobalData.userDetail.email,
@@ -266,7 +266,7 @@ class _UserInformationState extends State<UserInformation> {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                GlobalData.userDetail.displayName,
+                                GlobalData.userDetail.username,
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -483,14 +483,14 @@ class _UserInformationState extends State<UserInformation> {
                             child: Center(
                               child: AnimateGradient(
                                 primaryColors: const [
-                                  Color(0xFF6D4C41), // Coffee brown đậm
-                                  Color(0xFF8D6E63), // Mocha
-                                  Color(0xFFA1887F), // Latte
+                                  Color(0xFF6D4C41),
+                                  Color(0xFF8D6E63),
+                                  Color(0xFFA1887F),
                                 ],
                                 secondaryColors: const [
-                                  Color(0xFF5D4037), // Cacao đậm
-                                  Color(0xFF795548), // Nâu dịu nhẹ
-                                  Color(0xFFBCAAA4), // Sữa nâu
+                                  Color(0xFF5D4037),
+                                  Color(0xFF795548),
+                                  Color(0xFFBCAAA4),
                                 ],
                                 duration: const Duration(seconds: 5),
                                 child: DecoratedBox(
@@ -498,9 +498,164 @@ class _UserInformationState extends State<UserInformation> {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      // Change password logic
+                                    onPressed: () async {
+                                      final TextEditingController oldPassController = TextEditingController();
+                                      final TextEditingController newPassController = TextEditingController();
+                                      final TextEditingController confirmPassController = TextEditingController();
+
+                                      bool isOldVisible = false;
+                                      bool isNewVisible = false;
+                                      bool isConfirmVisible = false;
+                                      bool isLoading = false;
+
+
+                                      await showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (context) {
+                                          return StatefulBuilder(
+                                            builder: (context, setStateDialog) {
+                                              return AlertDialog(
+                                                title: const Text("🔒 Thay đổi mật khẩu"),
+                                                content: SingleChildScrollView(
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      TextField(
+                                                        controller: oldPassController,
+                                                        obscureText: !isOldVisible,
+                                                        decoration: InputDecoration(
+                                                          labelText: "Mật khẩu hiện tại",
+                                                          prefixIcon: const Icon(Icons.lock_outline),
+                                                          suffixIcon: IconButton(
+                                                            icon: Icon(isOldVisible
+                                                                ? Icons.visibility
+                                                                : Icons.visibility_off),
+                                                            onPressed: () {
+                                                              setStateDialog(() => isOldVisible = !isOldVisible);
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      TextField(
+                                                        controller: newPassController,
+                                                        obscureText: !isNewVisible,
+                                                        decoration: InputDecoration(
+                                                          labelText: "Mật khẩu mới",
+                                                          prefixIcon: const Icon(Icons.lock),
+                                                          suffixIcon: IconButton(
+                                                            icon: Icon(isNewVisible
+                                                                ? Icons.visibility
+                                                                : Icons.visibility_off),
+                                                            onPressed: () {
+                                                              setStateDialog(() => isNewVisible = !isNewVisible);
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      TextField(
+                                                        controller: confirmPassController,
+                                                        obscureText: !isConfirmVisible,
+                                                        decoration: InputDecoration(
+                                                          labelText: "Xác nhận mật khẩu mới",
+                                                          prefixIcon: const Icon(Icons.lock_reset),
+                                                          suffixIcon: IconButton(
+                                                            icon: Icon(isConfirmVisible
+                                                                ? Icons.visibility
+                                                                : Icons.visibility_off),
+                                                            onPressed: () {
+                                                              setStateDialog(() =>
+                                                              isConfirmVisible = !isConfirmVisible);
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if (isLoading)
+                                                        const Padding(
+                                                          padding: EdgeInsets.only(top: 16),
+                                                          child: CircularProgressIndicator(),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(context),
+                                                    child: const Text("Hủy"),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: isLoading
+                                                        ? null
+                                                        : () async {
+                                                      final oldPass = oldPassController.text.trim();
+                                                      final newPass = newPassController.text.trim();
+                                                      final confirmPass = confirmPassController.text.trim();
+
+                                                      if (oldPass.isEmpty ||
+                                                          newPass.isEmpty ||
+                                                          confirmPass.isEmpty) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text("❗Vui lòng nhập đầy đủ thông tin."),
+                                                            backgroundColor: Colors.orange,
+                                                          ),
+                                                        );
+                                                        return;
+                                                      }
+
+                                                      if (newPass != confirmPass) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(
+                                                            content:
+                                                            Text("❌ Mật khẩu xác nhận không khớp."),
+                                                            backgroundColor: Colors.red,
+                                                          ),
+                                                        );
+                                                        return;
+                                                      }
+
+                                                      setStateDialog(() => isLoading = true);
+                                                      try {
+                                                        final user = FirebaseAuth.instance.currentUser!;
+                                                        final cred = EmailAuthProvider.credential(
+                                                          email: user.email!,
+                                                          password: oldPass,
+                                                        );
+
+                                                        await user.reauthenticateWithCredential(cred);
+                                                        await user.updatePassword(newPass);
+
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text("✅ Đổi mật khẩu thành công!"),
+                                                            backgroundColor: Colors.green,
+                                                          ),
+                                                        );
+                                                        Navigator.pop(context);
+                                                      } catch (e) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text("⚠️ Lỗi: ${e.toString()}"),
+                                                            backgroundColor: Colors.red,
+                                                          ),
+                                                        );
+                                                      } finally {
+                                                        setStateDialog(() => isLoading = false);
+                                                      }
+                                                    },
+                                                    child: const Text("Xác nhận"),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      );
                                     },
+
+
                                     icon: const Icon(Icons.lock_outline),
                                     label: const Text("Thay đổi mật khẩu"),
                                     style: ElevatedButton.styleFrom(

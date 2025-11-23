@@ -1,35 +1,43 @@
 class UserDetail {
-  final String displayName;
+  final String uid;
+  final String username;
   final String email;
-  final String password;
+  String? password;
   final String photoURL;
-  late String rank;
-  late int point;
+  String rank;
+  int point;
+  String role;
 
   UserDetail({
-    required this.displayName,
+    required this.uid,
+    required this.username,
     required this.email,
-    required this.password,
+    this.password,
     required this.photoURL,
     required this.rank,
     required this.point,
+    required this.role,
   });
 
   factory UserDetail.fromJson(Map<String, dynamic> json) => UserDetail(
-    displayName: json['displayName'],
+    uid: json['uid'],
+    username: json['username'],
     email: json['email'],
-    password: json['password'],
+    password: json['password'] ?? "",
     photoURL: json['photoURL'],
     rank: json['rank'],
     point: json['point'],
+    role: json['role'] ?? "user",
   );
 
   Map<String, dynamic> toJson() => {
-    'displayName': displayName,
-    'email': email,
-    'password': password,
-    'photoURL': photoURL,
-    'rank': rank,
-    'point': point,
+    "uid": uid,
+    "username": username,
+    "email": email,
+    "password": password,
+    "photoURL": photoURL,
+    "rank": rank,
+    "point": point,
+    "role": role,
   };
 }

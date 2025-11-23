@@ -142,9 +142,8 @@ class _CartState extends State<Cart> {
       );
     }
 
-    GlobalData.userDetail = (await FirebaseDBManager.authService.getUserDetail(
-      GlobalData.userDetail.email,
-    ))!;
+    GlobalData.userDetail = (await FirebaseDBManager.authService.getProfile())!;
+
 
     setState(() {
       GlobalData.cartItemList.clear();
@@ -157,9 +156,8 @@ class _CartState extends State<Cart> {
 
   // ignore: non_constant_identifier_names
   Future<void> LoadData() async {
-    GlobalData.userDetail = (await FirebaseDBManager.authService.getUserDetail(
-      GlobalData.userDetail.email,
-    ))!;
+    GlobalData.userDetail = (await FirebaseDBManager.authService.getProfile())!;
+
 
     Coupon coupon = await FirebaseDBManager.couponService.getCoupon(
       GlobalData.userDetail.email,

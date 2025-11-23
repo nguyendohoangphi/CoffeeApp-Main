@@ -1,13 +1,11 @@
 import 'dart:ui';
-
-import 'package:coffeeapp/CustomMethod/generateCouponCode.dart';
 import 'package:coffeeapp/Entity/global_data.dart';
-import 'package:coffeeapp/Entity/userdetail.dart';
 import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
+import 'package:coffeeapp/Transition/menunavigationbar.dart';
 import 'package:coffeeapp/Transition/menunavigationbar_admin.dart';
 import 'package:flutter/material.dart';
-import 'package:coffeeapp/Transition/menunavigationbar.dart';
 import 'package:video_player/video_player.dart';
+import 'package:coffeeapp/UI/Login_Register/forgot_password_screen.dart';
 
 class CoffeeLoginRegisterScreen extends StatefulWidget {
   const CoffeeLoginRegisterScreen({super.key});
@@ -22,41 +20,26 @@ class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final _loginUsername = TextEditingController();
+  // Login fields
+  final _loginEmail = TextEditingController();
   final _loginPassword = TextEditingController();
 
+  // Register fields
   final _registerUsername = TextEditingController();
+  final _registerEmail = TextEditingController();
   final _registerPassword = TextEditingController();
   final _registerConfirm = TextEditingController();
 
-  final LinearGradient coffeeGradient = LinearGradient(
-    colors: [
-      Color.fromARGB(170, 75, 56, 50), // dark roast with 66% opacity
-      Color.fromARGB(170, 133, 68, 66), // reddish coffee
-      Color.fromARGB(170, 217, 176, 140), // caramel tone
-    ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  late List<UserDetail> userDetailList = [];
   @override
   void initState() {
     super.initState();
-    _controller =
-        VideoPlayerController.asset(
-            "assets/video/istockphoto-1439347335-640_adpp_is.mp4",
-          )
-          ..initialize().then((_) {
-            setState(() {});
-            _controller.setLooping(true);
-            _controller.setVolume(0);
-            _controller.play();
-          });
-  }
-
-  Future<void> LoadData() async {
-    userDetailList = await FirebaseDBManager.authService.getAllUsers();
+    _controller = VideoPlayerController.asset("assets/video/PhiNomcoffeeIntro.mp4")
+      ..initialize().then((_) {
+        setState(() {});
+        _controller.setLooping(true);
+        _controller.setVolume(0);
+        _controller.play();
+      });
   }
 
   @override
@@ -65,22 +48,15 @@ class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
     super.dispose();
   }
 
-  void clearLoginFields() {
-    _loginUsername.clear();
-    _loginPassword.clear();
-  }
-
-  void clearRegisterFields() {
-    _registerUsername.clear();
-    _registerPassword.clear();
-    _registerConfirm.clear();
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        /// Background video
         if (_controller.value.isInitialized)
           Positioned.fill(
             child: FittedBox(
@@ -93,126 +69,117 @@ class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
             ),
           ),
 
-        /// Foreground Content
+        // Glass overlay
+        Positioned.fill(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(color: Colors.black.withOpacity(0.45)),
+          ),
+        ),
+
         Scaffold(
-          backgroundColor: Colors.black.withOpacity(0.3), // translucent overlay
-          body: FutureBuilder<void>(
-            future: LoadData(),
-            builder: (context, asyncSnapshot) {
-              return SafeArea(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24.0),
-                      child: const Text(
-                        '☕ Cà phê Đậu Chill',
-                        style: TextStyle(
-                          fontSize: 32,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          shadows: [Shadow(color: Colors.black, blurRadius: 5)],
-                        ),
-                      ),
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 24.0),
+                  child: Text(
+                    '☕ PhiNom Coffee',
+                    style: TextStyle(
+                      fontSize: 34,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      shadows: [Shadow(color: Colors.black, blurRadius: 6)],
                     ),
-                    Expanded(
-                      child: ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(context).copyWith(
-                          dragDevices: {
-                            PointerDeviceKind.touch,
-                            PointerDeviceKind.mouse,
-                          },
-                        ),
-                        child: PageView(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            if (_currentPage != index) {
-                              if (index == 0) {
-                                LoadData();
-                                clearRegisterFields(); // Swiped to Login
-                              } else {
-                                LoadData();
-                                clearLoginFields(); // Swiped to Register
-                              }
-                              _currentPage = index;
-                            }
-                          },
-                          children: [_buildLoginForm(), _buildRegisterForm()],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Text(
-                        _currentPage == 0
-                            ? 'Lướt sang trái để đăng ký →'
-                            : '← Lướt sang phải để đăng nhập',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            },
+                const SizedBox(height: 20),
+
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (i) => setState(() => _currentPage = i),
+                    children: [
+                      _buildLoginForm(),
+                      _buildRegisterForm(),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+                Text(
+                  _currentPage == 0
+                      ? '👉 Lướt sang trái để đăng ký'
+                      : '👈 Lướt sang phải để đăng nhập',
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
+  // ================= LOGIN =================
   Widget _buildLoginForm() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      padding: const EdgeInsets.symmetric(horizontal: 28.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildField(_loginUsername, 'Tên đăng nhập'),
-          SizedBox(height: 12),
-          _buildField(_loginPassword, 'Mật khẩu', obscure: true),
-          SizedBox(height: 24),
-          coffeeButton('Đăng nhập', () async {
-            if (_loginUsername.text.isEmpty || _loginPassword.text.isEmpty) {
-              showMessage("Vui lòng điền cả tên người dùng và mật khẩu");
+          _glassField(_loginEmail, "Email", Icons.email_outlined),
+          const SizedBox(height: 16),
+          _glassField(_loginPassword, "Mật khẩu", Icons.lock_outline, obscure: true),
+          const SizedBox(height: 8),
+
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+              ),
+              child: const Text(
+                "Quên mật khẩu?",
+                style: TextStyle(color: Colors.white70, decoration: TextDecoration.underline),
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
+
+          _gradientButton("Đăng nhập", () async {
+            if (_loginEmail.text.isEmpty || _loginPassword.text.isEmpty) {
+              _showMessage("Vui lòng nhập email và mật khẩu");
               return;
             }
 
-            if (userDetailList
-                .where((element) => element.email == _loginUsername.text)
-                .isEmpty) {
-              showMessage("Tài khoản này chưa từng tồn tại");
-              return;
-            } else {
-              if (userDetailList
-                      .firstWhere(
-                        (element) => element.email == _loginUsername.text,
-                      )
-                      .password !=
-                  _loginPassword.text) {
-                showMessage("Sai mật khẩu");
-                return;
+            final result = await FirebaseDBManager.authService.login(
+              email: _loginEmail.text.trim(),
+              password: _loginPassword.text.trim(),
+            );
+
+            if (result == "OK") {
+              GlobalData.userDetail = (await FirebaseDBManager.authService.getProfile())!;
+              _showMessage("Đăng nhập thành công!");
+
+              if (GlobalData.userDetail.role == "admin") {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => MenuNavigationbarAdmin()),
+                );
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MenuNavigationBar(isDark: false, selectedIndex: 0),
+                  ),
+                );
               }
-            }
-            GlobalData.userDetail = (await FirebaseDBManager.authService
-                .getUserDetail(_loginUsername.text))!;
-
-            showMessage("Đăng nhập thành công");
-            _loginUsername.text = '';
-            _loginPassword.text = '';
-            Navigator.pop(context);
-            if (GlobalData.userDetail.rank == "Rank Admin") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MenuNavigationbarAdmin(),
-                ),
-              );
             } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      MenuNavigationBar(isDark: false, selectedIndex: 0),
-                ),
-              );
+              _showMessage(result!);
             }
           }),
         ],
@@ -220,89 +187,86 @@ class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
     );
   }
 
+  // ================= REGISTER =================
   Widget _buildRegisterForm() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      padding: const EdgeInsets.symmetric(horizontal: 28.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildField(_registerUsername, 'Tên đăng nhập'),
-          SizedBox(height: 12),
-          _buildField(_registerPassword, 'Mật khẩu', obscure: true),
-          SizedBox(height: 12),
-          _buildField(_registerConfirm, 'Xác nhận Mật khẩu', obscure: true),
-          SizedBox(height: 24),
-          coffeeButton('Đăng ký', () async {
+          _glassField(_registerUsername, "Tên đăng nhập", Icons.person_outline),
+          const SizedBox(height: 16),
+          _glassField(_registerEmail, "Email", Icons.email_outlined),
+          const SizedBox(height: 16),
+          _glassField(_registerPassword, "Mật khẩu", Icons.lock_outline, obscure: true),
+          const SizedBox(height: 16),
+          _glassField(_registerConfirm, "Xác nhận mật khẩu", Icons.lock_outline, obscure: true),
+          const SizedBox(height: 30),
+
+          _gradientButton("Đăng ký", () async {
             if (_registerUsername.text.isEmpty ||
+                _registerEmail.text.isEmpty ||
                 _registerPassword.text.isEmpty ||
                 _registerConfirm.text.isEmpty) {
-              showMessage("Vui lòng điền hết chỗ trống còn lại.");
+              _showMessage("Vui lòng điền đầy đủ thông tin");
               return;
             }
 
             if (_registerPassword.text != _registerConfirm.text) {
-              showMessage("Mật khẩu không khớp.");
+              _showMessage("Mật khẩu không khớp");
               return;
             }
 
-            if (userDetailList
-                .where((element) => element.email == _registerUsername.text)
-                .isNotEmpty) {
-              showMessage("Tài khoản này đã tồn tại");
-              return;
+            final result = await FirebaseDBManager.authService.register(
+              username: _registerUsername.text.trim(),
+              email: _registerEmail.text.trim(),
+              password: _registerPassword.text.trim(),
+            );
+
+            if (result == "OK") {
+              _showMessage("Đăng ký thành công!");
+              _pageController.animateToPage(0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut);
+            } else {
+              _showMessage(result!);
             }
-
-            await FirebaseDBManager.authService.registerWithEmail(
-              user: UserDetail(
-                displayName: _registerUsername.text.split('@')[0],
-                email: _registerUsername.text,
-                password: _registerPassword.text,
-                photoURL: 'assets/images/drink/user.png',
-                rank: 'Hạng đồng',
-                point: 0,
-              ),
-            );
-            await FirebaseDBManager.couponService.addSingleCouponCode(
-              _registerUsername.text,
-              generateCouponCode(),
-            );
-            showMessage("Đăng ký thành công");
-            _registerUsername.text = '';
-            _registerPassword.text = '';
-            _registerConfirm.text = '';
-
-            userDetailList = await FirebaseDBManager.authService.getAllUsers();
           }),
         ],
       ),
     );
   }
 
-  Widget coffeeButton(String text, VoidCallback onPressed) {
-    return InkWell(
+  // ================= COMPONENTS =================
+  Widget _gradientButton(String text, VoidCallback onPressed) {
+    return GestureDetector(
       onTap: onPressed,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient: coffeeGradient,
-          borderRadius: BorderRadius.circular(12),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFC107), Color(0xFF6D4C41)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.brown.withOpacity(0.4).withAlpha(170),
-              blurRadius: 8,
-              offset: Offset(0, 4),
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Center(
           child: Text(
             text,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
-              letterSpacing: 1.0,
+              letterSpacing: 0.5,
             ),
           ),
         ),
@@ -310,40 +274,26 @@ class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
     );
   }
 
-  Widget _buildField(
-    TextEditingController controller,
-    String hint, {
-    bool obscure = false,
-  }) {
+  Widget _glassField(TextEditingController controller, String hint, IconData icon,
+      {bool obscure = false}) {
     return Container(
       decoration: BoxDecoration(
-        gradient: coffeeGradient,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.brown.withOpacity(0.3).withAlpha(170),
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
-        ],
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white30),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: Colors.white70),
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white70),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          hintStyle: const TextStyle(color: Colors.white70),
           border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
-    );
-  }
-
-  void showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), duration: Duration(seconds: 1)),
     );
   }
 }

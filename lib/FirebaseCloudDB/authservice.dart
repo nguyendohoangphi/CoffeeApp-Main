@@ -1,64 +1,113 @@
-import 'package:coffeeapp/Entity/userdetail.dart';
-import 'package:coffeeapp/FirebaseCloudDB/tableindatabase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../Entity/userdetail.dart';
+import '../FirebaseCloudDB/tableindatabase.dart';
 
 class AuthService {
-  final CollectionReference _userRef = FirebaseFirestore.instance.collection(
-    TableInDatabase.UserDetailTable,
-  );
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final CollectionReference _users =
+  FirebaseFirestore.instance.collection(TableInDatabase.UserDetailTable);
 
-  Future<List<UserDetail>> getAllUsers() async {
-    final snapshot = await _userRef.get();
+  /// -------------------- REGISTER --------------------
+  Future<String?> register({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      UserCredential cred = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    if (snapshot.docs.isEmpty) {
-      print("No users found (collection might not exist or is empty)");
-      return [];
+      final uid = cred.user!.uid;
+
+      // save data user vào Firestore
+      await _users.doc(uid).set({
+        "uid": uid,
+        "username": username,
+        "email": email,
+        "photoURL": "assets/images/drink/user.png",
+        "rank": "Hạng đồng",
+        "point": 0,
+        "role": "user",
+      });
+
+      return "OK";
+    } on FirebaseAuthException catch (e) {
+      return e.message;
     }
+  }
 
+
+  /// -------------------- LOGIN --------------------
+  Future<String?> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+
+      await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+      return "OK";
+    } on FirebaseAuthException catch (e) {
+      return e.message;
+    }
+  }
+
+  /// -------------------- GET PROFILE --------------------
+  Future<UserDetail?> getProfile() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final doc = await _users.doc(user.uid).get();
+    if (!doc.exists) return null;
+
+    return UserDetail.fromJson(doc.data() as Map<String, dynamic>);
+  }
+
+  /// -------------------- LOGOUT --------------------
+  Future<void> logout() async {
+    await _auth.signOut();
+  }
+
+  /// -------------------- GET ALL --------------------
+  Future<List<UserDetail>> getAllUsers() async {
+    final snapshot = await _users.get();
     return snapshot.docs
-        .map((doc) => UserDetail.fromJson(doc.data() as Map<String, dynamic>))
+        .map((d) => UserDetail.fromJson(d.data() as Map<String, dynamic>))
         .toList();
   }
 
-  Future<void> deleteUserByEmail(String email) async {
-    await _userRef.doc(email).delete();
-  }
-
+  /// -------------------- UPDATE POINT + RANK --------------------
   Future<void> updateUserPointAndRank(
-    String email,
-    int newPoint,
-    String? newRank,
-  ) async {
-    final Map<String, dynamic> updates = {'point': newPoint};
-    if (newRank != null) {
-      updates['rank'] = newRank;
+      String uid, int point, String rank) async {
+    await _users.doc(uid).update({
+      "point": point,
+      "rank": rank,
+    });
+  }
+
+  /// -------------------- UPDATE PASSWORD (Firebase Auth) --------------------
+  Future<void> updatePassword(String newPassword) async {
+    await _auth.currentUser!.updatePassword(newPassword);
+  }
+
+  /// -------------------- DELETE USER (Firestore only) --------------------
+  Future<void> deleteUser(String uid) async {
+    await _users.doc(uid).delete();
+  }
+
+  /// -------------------- FORGOT PASS --------------------
+  Future<String> sendResetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return "Email khôi phục đã được gửi!";
+    } on FirebaseAuthException catch (e) {
+      return e.message ?? "Lỗi không xác định";
     }
-
-    await _userRef.doc(email).update(updates);
   }
 
-  Future<void> updateUserPasswordInFirestore(
-    String email,
-    String newPassword,
-  ) async {
-    final querySnapshot = await _userRef.where('email', isEqualTo: email).get();
-
-    for (var doc in querySnapshot.docs) {
-      await doc.reference.update({'password': newPassword});
-    }
-  }
-
-  // Sign up user
-  Future<void> registerWithEmail({required UserDetail user}) async {
-    await _userRef.doc(user.email).set(user.toJson());
-  }
-
-  // Get user profile from Firestore
-  Future<UserDetail?> getUserDetail(String email) async {
-    final doc = await _userRef.doc(email).get();
-    if (doc.exists) {
-      return UserDetail.fromJson(doc.data() as Map<String, dynamic>);
-    }
-    return null;
-  }
 }

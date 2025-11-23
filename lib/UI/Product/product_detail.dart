@@ -89,6 +89,7 @@ class _ProductDetailState extends State<ProductDetail> {
         priceUpdated = basePrice * 1.5;
       case SizeOption.Large:
         priceUpdated = basePrice * 2;
+        break;
     }
     return Scaffold(
       body: AnimateGradient(
@@ -161,40 +162,34 @@ class _ProductDetailState extends State<ProductDetail> {
 
                         /// Favourite button on top
                         Positioned(
-                          top:
-                              MediaQuery.of(context).padding.top +
-                              8, // Below status bar
+                          top: MediaQuery.of(context).padding.top + 8,
                           right: 8,
                           child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                AddOrRemove(widget.product);
-                                LoadData();
-                              });
+                            onTap: () async {
+                              // ✅ Đảm bảo add/remove xong rồi mới load lại
+                              await AddOrRemove(widget.product);
+                              await LoadData();
+                              setState(() {});
                             },
                             child: Icon(
                               productFavouriteList
-                                      .where(
-                                        (element) =>
-                                            element.productName ==
-                                            widget.product.name,
-                                      )
-                                      .isNotEmpty
+                                  .where(
+                                    (element) => element.productName == widget.product.name,
+                              )
+                                  .isNotEmpty
                                   ? Icons.favorite
                                   : Icons.favorite_border,
-                              color:
-                                  productFavouriteList
-                                      .where(
-                                        (element) =>
-                                            element.productName ==
-                                            widget.product.name,
-                                      )
-                                      .isNotEmpty
+                              color: productFavouriteList
+                                  .where(
+                                    (element) => element.productName == widget.product.name,
+                              )
+                                  .isNotEmpty
                                   ? Colors.redAccent
                                   : Colors.grey,
                             ),
                           ),
                         ),
+
 
                         // Detail Product
                         Positioned(
@@ -287,53 +282,19 @@ class _ProductDetailState extends State<ProductDetail> {
                                               });
                                             },
                                             style: TextButton.styleFrom(
-                                              backgroundColor:
-                                                  currentSize == size.key
-                                                  ? const Color.fromARGB(
-                                                      255,
-                                                      241,
-                                                      21,
-                                                      106,
-                                                    ).withOpacity(
-                                                      0.6,
-                                                    ) // Selected background
-                                                  : const Color.fromARGB(
-                                                      255,
-                                                      160,
-                                                      161,
-                                                      161,
-                                                    ).withOpacity(
-                                                      0.4,
-                                                    ), // Unselected background
-                                              foregroundColor:
-                                                  currentSize == size.key
-                                                  ? const Color.fromARGB(
-                                                      255,
-                                                      235,
-                                                      235,
-                                                      235,
-                                                    )
-                                                  : const Color.fromARGB(
-                                                      255,
-                                                      128,
-                                                      128,
-                                                      128,
-                                                    ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 12,
-                                                  ),
+                                              backgroundColor: currentSize == size.key
+                                                  ? Colors.grey.shade800.withOpacity(0.9)
+                                                  : Colors.white.withOpacity(0.25),
+                                              foregroundColor: currentSize == size.key
+                                                  ? Colors.white
+                                                  : Colors.black87,
                                               shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                side: const BorderSide(
-                                                  color: Color.fromARGB(
-                                                    255,
-                                                    186,
-                                                    82,
-                                                    207,
-                                                  ),
+                                                borderRadius: BorderRadius.circular(12),
+                                                side: BorderSide(
+                                                  color: currentSize == size.key
+                                                      ? Colors.grey.shade700
+                                                      : Colors.grey,
+                                                  width: 1.5,
                                                 ),
                                               ),
                                               textStyle: const TextStyle(
