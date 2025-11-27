@@ -15,6 +15,7 @@ dependencies:
   intl: ^0.20.2
   logger: ^2.5.0
   flutter_rating_stars: ^1.1.0
+  flutter_native_splash: ^2.4.7
   provider: ^6.1.5
   video_player: ^2.9.5
   package_info_plus: ^8.3.0
@@ -31,6 +32,7 @@ dependencies:
   lottie: ^3.3.1
   syncfusion_flutter_charts: ^29.2.9
   fl_chart: ^1.0.0
+  audioplayers: ^6.5.1
 
 dev_dependencies:
   flutter_test:
@@ -78,3 +80,15 @@ flutter:
     - assets/video/CoffeeRecommended.json
     - assets/background/CoffeeTitle.json
     - assets/background/loading.json
+    - assets/background/coffee_pour.json
+    - assets/audio/coffee_pour_sound.mp3
+fonts:
+  - family: Poppins
+    fonts:
+      - asset: assets/fonts/Poppins-Regular.ttf
+      - asset: assets/fonts/Poppins-SemiBold.ttf
+        weight: 600
+  - family: Inter
+    fonts:
+      - asset: assets/fonts/Inter-Regular.ttf
+      - asset: assets/fonts/Inter-Medium.ttf

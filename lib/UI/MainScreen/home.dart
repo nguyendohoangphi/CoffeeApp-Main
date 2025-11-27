@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:ui';
 import 'package:animate_gradient/animate_gradient.dart';
 import 'package:coffeeapp/Entity/ads.dart';

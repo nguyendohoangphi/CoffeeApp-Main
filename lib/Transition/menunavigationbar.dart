@@ -97,9 +97,9 @@ class _MenuNavigationBarState extends State<MenuNavigationBar> {
                   });
                 },
                 tabs: const [
-                  GButton(icon: Icons.home, text: 'Trang chính'),
-                  GButton(icon: Icons.apps, text: 'Danh mục nước uống'),
-                  GButton(icon: Icons.person, text: 'Cá nhân'),
+                  GButton(icon: Icons.home, text: 'Home'),
+                  GButton(icon: Icons.apps, text: 'Menu'),
+                  GButton(icon: Icons.person, text: 'Profile'),
                 ],
               ),
             ),
