@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../Entity/userdetail.dart';
 import '../FirebaseCloudDB/tableindatabase.dart';
 
+
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final CollectionReference _users =

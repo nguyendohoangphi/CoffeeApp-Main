@@ -3,9 +3,8 @@ import 'package:coffeeapp/Entity/ads.dart';
 import 'package:coffeeapp/FirebaseCloudDB/tableindatabase.dart';
 
 class AdsService {
-  final CollectionReference _adsRef = FirebaseFirestore.instance.collection(
-    TableInDatabase.AdsTable,
-  );
+  final CollectionReference _adsRef =
+      FirebaseFirestore.instance.collection(TableInDatabase.AdsTable);
 
   // CREATE
   Future<void> createAd(Ads ad) async {
@@ -21,7 +20,10 @@ class AdsService {
     try {
       final doc = await _adsRef.doc(id).get();
       if (doc.exists) {
-        return Ads.fromJson(doc.data() as Map<String, dynamic>);
+        return Ads.fromJson(
+          doc.data() as Map<String, dynamic>,
+          doc.id,
+        );
       }
       return null;
     } catch (e) {
@@ -31,33 +33,46 @@ class AdsService {
 
   // READ - All Ads (one-time fetch)
   Future<List<Ads>> getAds() async {
-    final snapshot = await _adsRef.get();
+    try {
+      final snapshot = await _adsRef.get();
 
-    if (snapshot.docs.isEmpty) {
-      print("No ads found (collection might not exist or is empty)");
-      return [];
+      if (snapshot.docs.isEmpty) {
+        print("No ads found (collection might not exist or is empty)");
+        return [];
+      }
+
+      return snapshot.docs
+          .map((doc) => Ads.fromJson(
+                doc.data() as Map<String, dynamic>,
+                doc.id,
+              ))
+          .toList();
+    } catch (e) {
+      throw Exception("Failed to load ads: $e");
     }
-
-    return snapshot.docs
-        .map((doc) => Ads.fromJson(doc.data() as Map<String, dynamic>))
-        .toList();
   }
 
-  // READ - All Ads by Partial Name (one-time fetch)
+  // READ - All Ads by Partial Name
   Future<List<Ads>> getAdsByPartialName(String query) async {
-    final snapshot = await _adsRef.get();
+    try {
+      final snapshot = await _adsRef.get();
 
-    if (snapshot.docs.isEmpty) {
-      print(
-        "No ads found for query: $query (collection might not exist or is empty)",
-      );
-      return [];
+      if (snapshot.docs.isEmpty) {
+        print("No ads found for query: $query");
+        return [];
+      }
+
+      return snapshot.docs
+          .map((doc) => Ads.fromJson(
+                doc.data() as Map<String, dynamic>,
+                doc.id,
+              ))
+          .where((ad) =>
+              ad.name.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    } catch (e) {
+      throw Exception("Failed to search ads: $e");
     }
-
-    return snapshot.docs
-        .map((doc) => Ads.fromJson(doc.data() as Map<String, dynamic>))
-        .where((ad) => ad.name.toLowerCase().contains(query.toLowerCase()))
-        .toList();
   }
 
   // UPDATE

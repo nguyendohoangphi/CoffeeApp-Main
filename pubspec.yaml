@@ -33,6 +33,8 @@ dependencies:
   syncfusion_flutter_charts: ^29.2.9
   fl_chart: ^1.0.0
   audioplayers: ^6.5.1
+  carousel_slider: ^5.0.0
+  
 
 dev_dependencies:
   flutter_test:
@@ -42,20 +44,15 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/banner/firstBanner.jpg
+    - assets/images/banner/firstbanner.jpg
     - assets/images/banner/secondbanner.jpg
     - assets/images/banner/thirdbanner.jpg
     - assets/images/drink/lemontea.jpg
-    - assets/images/drink/product2.jpg
-    - assets/images/drink/product3.jpg
-    - assets/images/drink/product4.jpg
+    - assets/images/drink/product1.png
+    - assets/images/drink/product2.png
+    - assets/images/drink/product3.png
+    - assets/images/drink/product4.png
     - assets/images/drink/product5.png
-    - assets/images/drink/product6.jpg
-    - assets/images/drink/product7.jpg
-    - assets/images/drink/product8.jpg
-    - assets/images/drink/product9.jpg
-    - assets/images/drink/product10.jpg
-    - assets/images/drink/product11.jpg
     - assets/images/drink/category1.jpg
     - assets/images/drink/category2.jpg
     - assets/images/drink/category3.jpg

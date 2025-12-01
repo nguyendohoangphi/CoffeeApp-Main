@@ -64,9 +64,9 @@ class _ProductDetailState extends State<ProductDetail> {
   double heightBtn_Bottom = 50;
 
   final Map<SizeOption, String> sizes = {
-    SizeOption.Small: 'Nhỏ',
-    SizeOption.Medium: 'Trung bình',
-    SizeOption.Large: 'Lớn',
+    SizeOption.Small: 'S',
+    SizeOption.Medium: 'X',
+    SizeOption.Large: 'XL',
   };
   late SizeOption currentSize;
   late double basePrice;
@@ -81,16 +81,18 @@ class _ProductDetailState extends State<ProductDetail> {
 
   @override
   Widget build(BuildContext context) {
-    switch (currentSize) {
-      case SizeOption.Small:
-        priceUpdated = basePrice;
-        break;
-      case SizeOption.Medium:
-        priceUpdated = basePrice * 1.5;
-      case SizeOption.Large:
-        priceUpdated = basePrice * 2;
-        break;
-    }
+switch (currentSize) {
+  case SizeOption.Small:
+    priceUpdated = basePrice;
+    break;
+  case SizeOption.Medium:
+    priceUpdated = basePrice * 1.5;
+    break;
+  case SizeOption.Large:
+    priceUpdated = basePrice * 2;
+    break;
+}
+
     return Scaffold(
       body: AnimateGradient(
         primaryBegin: Alignment.topLeft,

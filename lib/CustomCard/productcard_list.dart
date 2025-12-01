@@ -11,6 +11,7 @@ class ProductcardList extends StatefulWidget {
   late bool isDark;
   final int index;
   final Product product;
+
   ProductcardList({
     super.key,
     required this.product,
@@ -29,17 +30,6 @@ class _ProductcardListState extends State<ProductcardList> {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 5),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: widget.isDark
-              ? [Colors.grey.shade800, Colors.grey.shade700]
-              : [Colors.blue.shade50, Colors.white],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 3,
@@ -48,16 +38,15 @@ class _ProductcardListState extends State<ProductcardList> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// LEFT: Image
+              /// IMAGE
               GestureDetector(
                 onTap: () {
-                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ProductDetail(
                         isDark: widget.isDark,
-                        index: 0,
+                        index: widget.index,
                         product: widget.product,
                       ),
                     ),
@@ -76,37 +65,36 @@ class _ProductcardListState extends State<ProductcardList> {
 
               const SizedBox(width: 12),
 
-              /// CENTER: Name + Rating + Price
+              /// PRODUCT INFO
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ProductDetail(
                           isDark: widget.isDark,
-                          index: 0,
+                          index: widget.index,
                           product: widget.product,
                         ),
                       ),
                     );
                   },
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Product Name
                       Text(
                         widget.product.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.left,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+
                       const SizedBox(height: 4),
 
-                      // Rating and review count
                       Row(
                         children: [
                           Executeratingdisplay(rate: widget.product.rating),
@@ -120,9 +108,9 @@ class _ProductcardListState extends State<ProductcardList> {
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 6),
 
-                      // Price
                       Text(
                         '${format.format(widget.product.price)} đ',
                         style: const TextStyle(
@@ -136,95 +124,69 @@ class _ProductcardListState extends State<ProductcardList> {
                 ),
               ),
 
-              /// RIGHT: Add to Cart Button
+              /// ADD TO CART BUTTON
               Center(
                 child: IconButton(
-                  alignment: Alignment.centerRight,
                   onPressed: () {
                     setState(() {
+                      // thêm nhanh size SMALL
                       CartItem cartItem = CartItem(
                         productName: widget.product.name,
                         amount: 1,
                         size: SizeOption.Small,
                         idOrder: '',
-                        product: widget.product,
+                        product: Product(
+                          createDate: widget.product.createDate,
+                          name: widget.product.name,
+                          imageUrl: widget.product.imageUrl,
+                          description: widget.product.description,
+                          rating: widget.product.rating,
+                          reviewCount: widget.product.reviewCount,
+                          price: widget.product.price,
+                          type: widget.product.type,
+                        ),
                       );
 
+                      // tránh trùng ID
                       int id = 0;
-                      while (GlobalData.cartItemList
-                          .where(
-                            (element) =>
-                                element.productName.trim().toLowerCase() ==
-                                    cartItem.product.name
-                                        .trim()
-                                        .toLowerCase() &&
-                                element.size == cartItem.size &&
-                                element.id == id.toString(),
-                          )
-                          .isNotEmpty) {
+                      while (GlobalData.cartItemList.any(
+                        (e) =>
+                            e.productName.toLowerCase() ==
+                                cartItem.productName.toLowerCase() &&
+                            e.size == cartItem.size &&
+                            e.id == id.toString(),
+                      )) {
                         id++;
                       }
-
                       cartItem.id = id.toString();
 
-                      if (GlobalData.cartItemList
-                          .where(
-                            (element) =>
-                                element.productName.trim().toLowerCase() ==
-                                    cartItem.product.name
-                                        .trim()
-                                        .toLowerCase() &&
-                                element.size == cartItem.size,
-                          )
-                          .isNotEmpty) {
-                        GlobalData.cartItemList
-                            .firstWhere(
-                              (element) =>
-                                  element.productName.trim().toLowerCase() ==
-                                      cartItem.product.name
-                                          .trim()
-                                          .toLowerCase() &&
-                                  element.size == cartItem.size,
-                            )
-                            .amount += cartItem
-                            .amount;
-                        if (GlobalData.cartItemList
-                                .firstWhere(
-                                  (element) =>
-                                      element.productName
-                                              .trim()
-                                              .toLowerCase() ==
-                                          cartItem.product.name
-                                              .trim()
-                                              .toLowerCase() &&
-                                      element.size == cartItem.size,
-                                )
-                                .amount >
-                            10) {
-                          GlobalData.cartItemList
-                                  .firstWhere(
-                                    (element) =>
-                                        element.productName
-                                                .trim()
-                                                .toLowerCase() ==
-                                            cartItem.product.name
-                                                .trim()
-                                                .toLowerCase() &&
-                                        element.size == cartItem.size,
-                                  )
-                                  .amount =
-                              10;
-                        }
+                      // nếu có rồi → cộng số lượng
+                      var exist = GlobalData.cartItemList.where(
+                        (e) =>
+                            e.productName.toLowerCase() ==
+                                cartItem.productName.toLowerCase() &&
+                            e.size == cartItem.size,
+                      );
+
+                      if (exist.isNotEmpty) {
+                        exist.first.amount++;
+                        if (exist.first.amount > 10) exist.first.amount = 10;
                       } else {
                         GlobalData.cartItemList.add(cartItem);
                       }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Đã thêm ${widget.product.name}"),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
                     });
                   },
                   icon: const Icon(
                     Icons.shopping_cart_rounded,
-                    color: Colors.yellow,
-                    size: 24.0,
-                    semanticLabel: 'Thêm vào giỏ hàng',
+                    color: Colors.orange,
+                    size: 26,
                   ),
                 ),
               ),

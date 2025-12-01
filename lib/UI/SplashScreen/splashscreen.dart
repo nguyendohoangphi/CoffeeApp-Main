@@ -115,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
               const SizedBox(height: 20),
 
               const Text(
-                "☕ PhiNom Coffee",
+                "",
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 22,
@@ -125,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(height: 6),
               const Text(
-                "Coffee crafted with love.",
+                "",
                 style: TextStyle(
                   fontFamily: 'Inter',
                   color: Colors.white70,

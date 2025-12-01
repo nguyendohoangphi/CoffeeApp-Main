@@ -7,6 +7,8 @@ import 'package:coffeeapp/CustomCard/menuitem.dart';
 import 'package:coffeeapp/UI/Login_Register/coffeeloginregisterscreen.dart';
 import 'package:coffeeapp/UI/Order/cart.dart';
 import 'package:coffeeapp/UI/Order/historyorder.dart';
+import 'package:coffeeapp/Entity/userdetail.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Profile extends StatefulWidget {
   final bool isDark;
@@ -147,19 +149,58 @@ class _ProfileState extends State<Profile> {
                           ),
                           MenuItem(title: "Cài đặt"),
                           MenuItem(title: "Về app"),
-                          MenuItem(
-                            title: "Đăng xuất",
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                  const CoffeeLoginRegisterScreen(),
-                                ),
+                          
+                        MenuItem(
+                          title: "Đăng xuất",
+                          onTap: () async {
+                            final navigator = Navigator.of(context);
+
+                            try {
+                              // ✅ Gọi logout chính thức
+                              await FirebaseDBManager.authService.logout();
+
+                              // ✅ Reset lại session cho chắc (đợi Firebase clear cache)
+                              await Future.delayed(const Duration(milliseconds: 300));
+
+                              // ✅ Xóa dữ liệu user hiện tại trong GlobalData
+                              GlobalData.userDetail = UserDetail(
+                                uid: "",
+                                username: "",
+                                email: "",
+                                password: "",
+                                photoURL: "",
+                                rank: "",
+                                point: 0,
+                                role: "",
                               );
-                            },
-                          ),
+
+                              // ✅ Quay lại màn hình login, xóa toàn bộ navigation stack
+                              navigator.pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (_) => const CoffeeLoginRegisterScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            } catch (e) {
+                              debugPrint("❌ Lỗi khi đăng xuất: $e");
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Đăng xuất thất bại!")),
+                                );
+                              }
+                            }
+                          },
+                        ),
+
+
+
+
+
+
+
+
+
+
                         ],
                       ),
                     ),

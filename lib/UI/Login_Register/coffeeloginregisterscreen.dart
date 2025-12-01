@@ -6,6 +6,9 @@ import 'package:coffeeapp/Transition/menunavigationbar_admin.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:coffeeapp/UI/Login_Register/forgot_password_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/scheduler.dart';
+
 
 class CoffeeLoginRegisterScreen extends StatefulWidget {
   const CoffeeLoginRegisterScreen({super.key});
@@ -16,7 +19,22 @@ class CoffeeLoginRegisterScreen extends StatefulWidget {
 }
 
 class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
-  late VideoPlayerController _controller;
+
+//bool isLoading = false;
+
+
+Future<void> _resetFirebaseAuthSession() async {
+  try {
+    await FirebaseAuth.instance.signOut(); // Đảm bảo signOut hoàn tất
+    await Future.delayed(const Duration(milliseconds: 300)); // Chờ Firebase reset cache
+    debugPrint("✅ Firebase session reset thành công");
+  } catch (e) {
+    debugPrint("⚠️ Lỗi reset Firebase session: $e");
+  }
+}
+
+
+ // late VideoPlayerController _controller;
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -30,21 +48,36 @@ class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
   final _registerPassword = TextEditingController();
   final _registerConfirm = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.asset("assets/video/PhiNomcoffeeIntro.mp4")
-      ..initialize().then((_) {
-        setState(() {});
-        _controller.setLooping(true);
-        _controller.setVolume(0);
-        _controller.play();
-      });
-  }
+
+
+@override
+void initState() {
+  super.initState();
+
+  // Đảm bảo reset session Firebase trước khi build UI
+  SchedulerBinding.instance.addPostFrameCallback((_) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      debugPrint(" Đã xoá session Firebase trước khi load login");
+    } catch (e) {
+      debugPrint(" Lỗi reset Firebase session: $e");
+    }
+  });
+
+//  _controller = VideoPlayerController.asset("assets/video/PhiNomcoffeeIntro.mp4")
+//    ..initialize().then((_) {
+//      setState(() {});
+//      _controller.setLooping(true);
+//      _controller.setVolume(0);
+//      _controller.play();
+//    });
+}
+
+
 
   @override
   void dispose() {
-    _controller.dispose();
+  //  _controller.dispose();
     super.dispose();
   }
 
@@ -57,17 +90,28 @@ class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (_controller.value.isInitialized)
-          Positioned.fill(
-            child: FittedBox(
-              fit: BoxFit.cover,
-              child: SizedBox(
-                width: _controller.value.size.width,
-                height: _controller.value.size.height,
-                child: VideoPlayer(_controller),
-              ),
-            ),
+      //  if (_controller.value.isInitialized)
+      //    Positioned.fill(
+      //      child: FittedBox(
+      //        fit: BoxFit.cover,
+      //        child: SizedBox(
+      //          width: _controller.value.size.width,
+      //          height: _controller.value.size.height,
+      //          child: VideoPlayer(_controller),
+      //        ),
+      //      ),
+      //    ),
+    Positioned.fill(
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF3E2723), Color(0xFF6D4C41)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
+        ),
+      ),
+    ),
 
         // Glass overlay
         Positioned.fill(
@@ -150,38 +194,86 @@ class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
           ),
           const SizedBox(height: 30),
 
-          _gradientButton("Đăng nhập", () async {
-            if (_loginEmail.text.isEmpty || _loginPassword.text.isEmpty) {
-              _showMessage("Vui lòng nhập email và mật khẩu");
-              return;
-            }
+          
+_gradientButton("Đăng nhập", () async {
+  if (_loginEmail.text.isEmpty || _loginPassword.text.isEmpty) {
+    if (!mounted) return;
+    _showMessage("Vui lòng nhập email và mật khẩu");
+    return;
+  }
 
-            final result = await FirebaseDBManager.authService.login(
-              email: _loginEmail.text.trim(),
-              password: _loginPassword.text.trim(),
-            );
+  // ✅ Reset session Firebase cũ
+  try {
+    await FirebaseAuth.instance.signOut();
+    await Future.delayed(const Duration(milliseconds: 300));
+  } catch (e) {
+    debugPrint("⚠️ Lỗi khi reset session: $e");
+  }
 
-            if (result == "OK") {
-              GlobalData.userDetail = (await FirebaseDBManager.authService.getProfile())!;
-              _showMessage("Đăng nhập thành công!");
+  final result = await FirebaseDBManager.authService.login(
+    email: _loginEmail.text.trim(),
+    password: _loginPassword.text.trim(),
+  );
 
-              if (GlobalData.userDetail.role == "admin") {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => MenuNavigationbarAdmin()),
-                );
-              } else {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MenuNavigationBar(isDark: false, selectedIndex: 0),
-                  ),
-                );
-              }
-            } else {
-              _showMessage(result!);
-            }
-          }),
+  if (result == "OK") {
+    try {
+      final profile = await FirebaseDBManager.authService.getProfile();
+      if (profile == null) {
+        if (!mounted) return;
+        _showMessage("Không thể lấy thông tin người dùng!");
+        return;
+      }
+
+      GlobalData.userDetail = profile;
+
+      // ⚡ Không dùng SnackBar trực tiếp – vì context có thể bị dispose
+      if (!mounted) return;
+
+      // ✅ Dùng addPostFrameCallback để show SnackBar an toàn sau khi build xong
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Đăng nhập thành công!")),
+          );
+        }
+      });
+
+      // ✅ Chờ 1 chút rồi điều hướng – tránh conflict context
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      if (!mounted) return;
+
+      // ✅ Điều hướng bằng context hiện tại (đã kiểm tra)
+      final navigator = Navigator.of(context);
+      if (GlobalData.userDetail.role == "admin") {
+        navigator.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => MenuNavigationbarAdmin()),
+          (route) => false,
+        );
+      } else {
+        navigator.pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => MenuNavigationBar(isDark: false, selectedIndex: 0),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint("❌ Lỗi khi lấy profile hoặc điều hướng: $e");
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Đăng nhập thất bại, vui lòng thử lại.")),
+          );
+        });
+      }
+    }
+  } else {
+    if (mounted) _showMessage(result ?? "Đăng nhập thất bại");
+  }
+}),
+
+
         ],
       ),
     );

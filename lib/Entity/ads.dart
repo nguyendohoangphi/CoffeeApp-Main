@@ -11,12 +11,15 @@ class Ads {
     required this.imageUrl,
   });
 
-  factory Ads.fromJson(Map<String, dynamic> json) => Ads(
-    id: json['id'],
-    createDate: json['createDate'],
-    name: json['name'],
-    imageUrl: json['imageUrl'],
+factory Ads.fromJson(Map<String, dynamic> json, String docId) {
+  return Ads(
+    id: docId,
+    createDate: json['createDate'] ?? '',
+    name: json['name'] ?? '',
+    imageUrl: json['imageUrl'] ?? '',
   );
+}
+
 
   Map<String, dynamic> toJson() => {
     'id': id,

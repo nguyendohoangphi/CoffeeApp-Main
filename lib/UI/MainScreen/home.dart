@@ -14,7 +14,11 @@ import 'package:coffeeapp/Entity/global_data.dart';
 import 'package:coffeeapp/UI/Product/product_list.dart';
 import 'package:lottie/lottie.dart';
 import 'package:logger/logger.dart';
-import 'package:video_player/video_player.dart';
+import 'dart:async';
+import 'package:carousel_slider/carousel_slider.dart';
+
+
+//import 'package:video_player/video_player.dart';
 
 class Home extends StatefulWidget {
   late bool isDark;
@@ -27,6 +31,9 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+
+
+
   late AnimationController _controller;
   late Animation<double> _iconAnimation;
 
@@ -37,6 +44,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   late List<CategoryProduct> categories = [];
   late List<Product> favouriteProduct = [];
   late List<Ads> ads = [];
+
+   //ads
+  int _currentBanner = 0;
+  late Future<void> _loadDataFuture;
+  
+
+
+
 
   var logger = Logger();
 
@@ -55,10 +70,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           parent: _controller,
           curve: Curves.easeInOut,
         ));
+
+    //ads load firestore 1 lan duy nhat
+    _loadDataFuture = LoadData();
+
   }
+
+
 
   @override
   void dispose() {
+    
     _controller.dispose();
     super.dispose();
   }
@@ -76,6 +98,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     await FirebaseDBManager.productService.getTop10RatedProducts();
 
     ads = await FirebaseDBManager.adsService.getAds();
+ 
+
+
+
 
     if (categories.isNotEmpty) {
       productsCategory = await FirebaseDBManager.productService
@@ -95,12 +121,26 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   // ------------------------------------------------------------
   // UI BUILD
   // ------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: FutureBuilder(
-        future: LoadData(),
+        future: _loadDataFuture,
+        //future: LoadData(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -234,6 +274,94 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
           const SizedBox(height: 20),
 
+
+
+                        
+                // ------------------------------------------------------------
+                // ADS BANNER (CAROUSEL + INDICATOR)
+                // ------------------------------------------------------------
+                if (ads.isNotEmpty)
+                  Column(
+                    children: [
+                      CarouselSlider(
+                        options: CarouselOptions(
+                          height: 180,
+                          enlargeCenterPage: true,
+                          autoPlay: true,
+                          autoPlayInterval: const Duration(seconds: 4),
+                          viewportFraction: 0.9,
+                          onPageChanged: (index, reason) {
+                            setState(() {
+                              _currentBanner = index;
+                            });
+                          },
+                        ),
+                        items: ads.map((ad) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Stack(
+                              children: [
+                                // IMAGE
+                                Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image: ad.imageUrl.startsWith("assets/")
+                                          ? AssetImage(ad.imageUrl)
+                                          : NetworkImage(ad.imageUrl) as ImageProvider,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+
+                                // GRADIENT OVERLAY
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        Colors.black.withOpacity(0.4),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // INDICATOR
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: ads.asMap().entries.map((entry) {
+                          bool active = _currentBanner == entry.key;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            width: active ? 20 : 8,
+                            height: 8,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: active ? Colors.white : Colors.grey.shade400,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+
+                const SizedBox(height: 20),
+
+
+
+
+        
           // ------------------------------------------------------------
           // CATEGORY
           // ------------------------------------------------------------
