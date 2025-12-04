@@ -21,20 +21,19 @@ class _CartcardState extends State<Cartcard> {
   String GetSizeString(SizeOption size) {
     switch (size) {
       case SizeOption.Small:
-        return "Nhỏ";
+        return "S";
       case SizeOption.Medium:
-        return "Vừa";
+        return "X";
       case SizeOption.Large:
-        return "Lớn";
+        return "XL";
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    Product productInfo =
-        FirebaseDBManager.productService.getProductByName(
-              widget.cartItem.productName,
-            )
+    Product productInfo = FirebaseDBManager.productService.getProductByName(
+          widget.cartItem.productName
+    )
             as Product;
     return Padding(
       padding: const EdgeInsets.all(8.0),

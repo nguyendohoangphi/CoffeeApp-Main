@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:coffeeapp/Entity/Product.dart';
 import 'package:coffeeapp/Entity/productfavourite.dart';
 import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';

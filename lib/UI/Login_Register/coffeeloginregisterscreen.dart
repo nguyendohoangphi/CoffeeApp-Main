@@ -1,14 +1,12 @@
-import 'dart:ui';
-import 'package:coffeeapp/Entity/global_data.dart';
-import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
-import 'package:coffeeapp/Transition/menunavigationbar.dart';
-import 'package:coffeeapp/Transition/menunavigationbar_admin.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:coffeeapp/constants/app_colors.dart';
 import 'package:coffeeapp/UI/Login_Register/forgot_password_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/scheduler.dart';
-
+import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
+import 'package:coffeeapp/Entity/global_data.dart';
+import 'package:coffeeapp/Transition/menunavigationbar.dart';
+import 'package:coffeeapp/Transition/menunavigationbar_admin.dart';
 
 class CoffeeLoginRegisterScreen extends StatefulWidget {
   const CoffeeLoginRegisterScreen({super.key});
@@ -19,373 +17,436 @@ class CoffeeLoginRegisterScreen extends StatefulWidget {
 }
 
 class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
-
-//bool isLoading = false;
-
-
-Future<void> _resetFirebaseAuthSession() async {
-  try {
-    await FirebaseAuth.instance.signOut(); // Đảm bảo signOut hoàn tất
-    await Future.delayed(const Duration(milliseconds: 300)); // Chờ Firebase reset cache
-    debugPrint("✅ Firebase session reset thành công");
-  } catch (e) {
-    debugPrint("⚠️ Lỗi reset Firebase session: $e");
-  }
-}
-
-
- // late VideoPlayerController _controller;
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // Login fields
+  // TEXT CONTROLLERS
   final _loginEmail = TextEditingController();
   final _loginPassword = TextEditingController();
 
-  // Register fields
   final _registerUsername = TextEditingController();
   final _registerEmail = TextEditingController();
   final _registerPassword = TextEditingController();
   final _registerConfirm = TextEditingController();
 
-
-
-@override
-void initState() {
-  super.initState();
-
-  // Đảm bảo reset session Firebase trước khi build UI
-  SchedulerBinding.instance.addPostFrameCallback((_) async {
-    try {
-      await FirebaseAuth.instance.signOut();
-      debugPrint(" Đã xoá session Firebase trước khi load login");
-    } catch (e) {
-      debugPrint(" Lỗi reset Firebase session: $e");
-    }
-  });
-
-//  _controller = VideoPlayerController.asset("assets/video/PhiNomcoffeeIntro.mp4")
-//    ..initialize().then((_) {
-//      setState(() {});
-//      _controller.setLooping(true);
-//      _controller.setVolume(0);
-//      _controller.play();
-//    });
-}
-
-
+  bool _showLoginPassword = false;
+  bool _showRegisterPassword = false;
+  bool _showRegisterConfirm = false;
 
   @override
-  void dispose() {
-  //  _controller.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      await FirebaseAuth.instance.signOut();
+    });
   }
 
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-      //  if (_controller.value.isInitialized)
-      //    Positioned.fill(
-      //      child: FittedBox(
-      //        fit: BoxFit.cover,
-      //        child: SizedBox(
-      //          width: _controller.value.size.width,
-      //          height: _controller.value.size.height,
-      //          child: VideoPlayer(_controller),
-      //        ),
-      //      ),
-      //    ),
-    Positioned.fill(
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF3E2723), Color(0xFF6D4C41)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-      ),
-    ),
 
-        // Glass overlay
-        Positioned.fill(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(color: Colors.black.withOpacity(0.45)),
-          ),
-        ),
 
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            child: Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 24.0),
-                  child: Text(
-                    '☕ PhiNom Coffee',
-                    style: TextStyle(
-                      fontSize: 34,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      shadows: [Shadow(color: Colors.black, blurRadius: 6)],
+        @override
+        Widget build(BuildContext context) {
+          // Lấy chiều cao bàn phím
+          final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+
+          return Scaffold(
+            backgroundColor: Colors.white,
+            // QUAN TRỌNG: Giữ nguyên khung hình, không để bàn phím đẩy layout gốc
+            resizeToAvoidBottomInset: false, 
+
+            body: SizedBox(
+              height: MediaQuery.of(context).size.height,
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  // ================= LỚP 1: BACKGROUND CỐ ĐỊNH =================
+                  Positioned.fill(
+                    child: Image.asset(
+                      "assets/images/background_coffee.jpg", 
+                      fit: BoxFit.cover,
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (i) => setState(() => _currentPage = i),
-                    children: [
-                      _buildLoginForm(),
-                      _buildRegisterForm(),
-                    ],
+                  
+                  Positioned.fill(
+                    child: Container(color: Colors.black.withOpacity(0.3)), // Màu tối nhẹ
                   ),
-                ),
 
-                const SizedBox(height: 20),
-                Text(
-                  _currentPage == 0
-                      ? '👉 Lướt sang trái để đăng ký'
-                      : '👈 Lướt sang phải để đăng nhập',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-                const SizedBox(height: 20),
-              ],
+                  // ================= LỚP 2: NỘI DUNG FORM  =================
+                  Positioned.fill(
+                    child: SingleChildScrollView(
+                      // Cho phép nảy nhẹ kiểu iOS
+                      physics: const BouncingScrollPhysics(), 
+                      child: Padding(
+                        // Padding bottom bằng chiều cao bàn phím để đẩy nội dung lên vừa đủ
+                        padding: EdgeInsets.only(bottom: bottomPadding), 
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.18),
+
+                            // LOGO
+                            // Image.asset(
+                            //   "assets/images/logo.png",
+                            //    height: 100, // Kích thước cố định sang trọng
+                            // ),
+                            
+                            const SizedBox(height: 10),
+                            
+                            
+                            // const Text(
+                            //   "Coffee Phinom",
+                            //   style: TextStyle(
+                            //     fontSize: 28, 
+                            //     fontWeight: FontWeight.bold, 
+                            //     color: Colors.white, 
+                            //     fontFamily: 'Montserrat' 
+                            //   ),
+                            // ),
+
+                            const SizedBox(height: 30),
+
+                            // KHỐI FORM 
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              decoration: BoxDecoration(
+                                color: Colors.white, 
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 10,
+                                    offset: Offset(0, 5),
+                                  )
+                                ]
+                              ),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                child: _currentPage == 0
+                                    ? _buildLoginForm()
+                                    : _buildRegisterForm(),
+                              ),
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // TEXT CHUYỂN TRANG
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _currentPage == 0
+                                      ? "Bạn chưa có tài khoản? "
+                                      : "Đã có tài khoản? ",
+                                  style: const TextStyle(fontSize: 14, color: Colors.white),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _currentPage = _currentPage == 0 ? 1 : 0;
+                                    });
+                                  },
+                                  child: Text(
+                                    _currentPage == 0 ? "Đăng ký ngay" : "Đăng nhập",
+                                    style: const TextStyle(
+                                      color: Color.fromARGB(255, 255, 194, 103), // Màu cam Coffee
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            
+                            // Khoảng cách dưới cùng để khi scroll không bị sát quá
+                            const SizedBox(height: 50),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
-      ],
-    );
-  }
+          );
+        }
 
-  // ================= LOGIN =================
+
+
+  // =====================================================================
+  // LOGIN FORM 
+  // =====================================================================
   Widget _buildLoginForm() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 26),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _glassField(_loginEmail, "Email", Icons.email_outlined),
-          const SizedBox(height: 16),
-          _glassField(_loginPassword, "Mật khẩu", Icons.lock_outline, obscure: true),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
+
+          _shopeeTextField(
+            hint: "Email address",
+            icon: Icons.person_outline,
+            controller: _loginEmail,
+          ),
+          const SizedBox(height: 25),
+
+          _shopeePasswordField(
+            hint: "Password",
+            controller: _loginPassword,
+            isVisible: _showLoginPassword,
+            onToggle: () =>
+                setState(() => _showLoginPassword = !_showLoginPassword),
+          ),
+
+          const SizedBox(height: 10),
 
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
               onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                  context,
+                  MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+              child: Text("Forgotten password?",
+                  style: TextStyle(color: Colors.blue.shade600, fontSize: 14)),
+            ),
+          ),
+
+          const SizedBox(height: 35),
+
+          // LOGIN BUTTON
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _handleLogin,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade300,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
               ),
               child: const Text(
-                "Quên mật khẩu?",
-                style: TextStyle(color: Colors.white70, decoration: TextDecoration.underline),
+                "Login",
+                style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ),
-          const SizedBox(height: 30),
-
-          
-_gradientButton("Đăng nhập", () async {
-  if (_loginEmail.text.isEmpty || _loginPassword.text.isEmpty) {
-    if (!mounted) return;
-    _showMessage("Vui lòng nhập email và mật khẩu");
-    return;
-  }
-
-  // ✅ Reset session Firebase cũ
-  try {
-    await FirebaseAuth.instance.signOut();
-    await Future.delayed(const Duration(milliseconds: 300));
-  } catch (e) {
-    debugPrint("⚠️ Lỗi khi reset session: $e");
-  }
-
-  final result = await FirebaseDBManager.authService.login(
-    email: _loginEmail.text.trim(),
-    password: _loginPassword.text.trim(),
-  );
-
-  if (result == "OK") {
-    try {
-      final profile = await FirebaseDBManager.authService.getProfile();
-      if (profile == null) {
-        if (!mounted) return;
-        _showMessage("Không thể lấy thông tin người dùng!");
-        return;
-      }
-
-      GlobalData.userDetail = profile;
-
-      // ⚡ Không dùng SnackBar trực tiếp – vì context có thể bị dispose
-      if (!mounted) return;
-
-      // ✅ Dùng addPostFrameCallback để show SnackBar an toàn sau khi build xong
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Đăng nhập thành công!")),
-          );
-        }
-      });
-
-      // ✅ Chờ 1 chút rồi điều hướng – tránh conflict context
-      await Future.delayed(const Duration(milliseconds: 600));
-
-      if (!mounted) return;
-
-      // ✅ Điều hướng bằng context hiện tại (đã kiểm tra)
-      final navigator = Navigator.of(context);
-      if (GlobalData.userDetail.role == "admin") {
-        navigator.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => MenuNavigationbarAdmin()),
-          (route) => false,
-        );
-      } else {
-        navigator.pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => MenuNavigationBar(isDark: false, selectedIndex: 0),
-          ),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      debugPrint("❌ Lỗi khi lấy profile hoặc điều hướng: $e");
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Đăng nhập thất bại, vui lòng thử lại.")),
-          );
-        });
-      }
-    }
-  } else {
-    if (mounted) _showMessage(result ?? "Đăng nhập thất bại");
-  }
-}),
-
-
         ],
       ),
     );
   }
 
-  // ================= REGISTER =================
+  // =====================================================================
+  // REGISTER FORM 
+  // =====================================================================
   Widget _buildRegisterForm() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 26),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _glassField(_registerUsername, "Tên đăng nhập", Icons.person_outline),
-          const SizedBox(height: 16),
-          _glassField(_registerEmail, "Email", Icons.email_outlined),
-          const SizedBox(height: 16),
-          _glassField(_registerPassword, "Mật khẩu", Icons.lock_outline, obscure: true),
-          const SizedBox(height: 16),
-          _glassField(_registerConfirm, "Xác nhận mật khẩu", Icons.lock_outline, obscure: true),
+          const SizedBox(height: 20),
+
+          _shopeeTextField(
+            hint: "Name",
+            icon: Icons.person_outline,
+            controller: _registerUsername,
+          ),
+          const SizedBox(height: 20),
+
+          _shopeeTextField(
+            hint: "Email",
+            icon: Icons.email_outlined,
+            controller: _registerEmail,
+          ),
+          const SizedBox(height: 20),
+
+          _shopeePasswordField(
+            hint: "Password",
+            controller: _registerPassword,
+            isVisible: _showRegisterPassword,
+            onToggle: () => setState(
+                () => _showRegisterPassword = !_showRegisterPassword),
+          ),
+          const SizedBox(height: 20),
+
+          _shopeePasswordField(
+            hint: "Confirm password",
+            controller: _registerConfirm,
+            isVisible: _showRegisterConfirm,
+            onToggle: () => setState(
+                () => _showRegisterConfirm = !_showRegisterConfirm),
+          ),
+
           const SizedBox(height: 30),
 
-          _gradientButton("Đăng ký", () async {
-            if (_registerUsername.text.isEmpty ||
-                _registerEmail.text.isEmpty ||
-                _registerPassword.text.isEmpty ||
-                _registerConfirm.text.isEmpty) {
-              _showMessage("Vui lòng điền đầy đủ thông tin");
-              return;
-            }
-
-            if (_registerPassword.text != _registerConfirm.text) {
-              _showMessage("Mật khẩu không khớp");
-              return;
-            }
-
-            final result = await FirebaseDBManager.authService.register(
-              username: _registerUsername.text.trim(),
-              email: _registerEmail.text.trim(),
-              password: _registerPassword.text.trim(),
-            );
-
-            if (result == "OK") {
-              _showMessage("Đăng ký thành công!");
-              _pageController.animateToPage(0,
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut);
-            } else {
-              _showMessage(result!);
-            }
-          }),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _handleRegister,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade300,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+              ),
+              child: const Text(
+                "Create new account",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // ================= COMPONENTS =================
-  Widget _gradientButton(String text, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFC107), Color(0xFF6D4C41)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+  // =====================================================================
+  // ------------------------ Coffee STYLE FIELDS ------------------------
+  // =====================================================================
+          Widget _shopeeTextField({
+              required String hint,
+              required IconData icon,
+              required TextEditingController controller,
+          }) {
+              return Column(
+          children: [
+                 Row(
+                    children: [
+                          Icon(icon, color: Colors.grey.shade600, size: 22),
+                          const SizedBox(width: 10),
+                          Expanded(
+                              child: TextField(
+                              controller: controller,
+                                    style: const TextStyle(  fontSize: 15,  color: Colors.black  ),
+                                  decoration: InputDecoration(
+                                  hintText: hint,
+                                  hintStyle:
+                                  TextStyle(color:Colors.grey.shade500, fontSize: 15),
+                                  border: InputBorder.none,
+                                  ),
+                              ),
+                          ),
+                     ],
+                 ),
+          Container(height: 1, color: Colors.grey.shade300),
+          ],
+              ) ;
+            }
+
+
+  Widget _shopeePasswordField({
+    required String hint,
+    required TextEditingController controller,
+    required bool isVisible,
+    required VoidCallback onToggle,
+  }) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(Icons.lock_outline, color: Colors.grey.shade600, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                obscureText: !isVisible,
+                style: const TextStyle(fontSize: 15, color: Colors.black),
+                decoration: InputDecoration(
+                  hintText: hint,
+                  hintStyle:
+                      TextStyle(color: Colors.grey.shade500, fontSize: 15),
+                  border: InputBorder.none,
+                ),
+              ),
             ),
+            GestureDetector(
+              onTap: onToggle,
+              child: Icon(
+                isVisible ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey.shade600,
+              ),
+            )
           ],
         ),
-        child: Center(
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-      ),
+        Container(height: 1, color: Colors.grey.shade300),
+      ],
     );
   }
 
-  Widget _glassField(TextEditingController controller, String hint, IconData icon,
-      {bool obscure = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white30),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white70),
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.white70),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        ),
-      ),
+  // =====================================================================
+  // LOGIC LOGIN / REGISTER 
+  // =====================================================================
+
+  Future<void> _handleLogin() async {
+    if (_loginEmail.text.isEmpty || _loginPassword.text.isEmpty) {
+      _showMessage("Vui lòng nhập email và mật khẩu");
+      return;
+    }
+
+    await FirebaseAuth.instance.signOut();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final result = await FirebaseDBManager.authService.login(
+      email: _loginEmail.text.trim(),
+      password: _loginPassword.text.trim(),
     );
+
+    if (result != "OK") {
+      _showMessage(result ?? "Đăng nhập thất bại");
+      return;
+    }
+
+    final profile = await FirebaseDBManager.authService.getProfile();
+    if (profile == null) {
+      _showMessage("Không thể lấy thông tin người dùng!");
+      return;
+    }
+
+    GlobalData.userDetail = profile;
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => profile.role == "admin"
+            ? MenuNavigationbarAdmin()
+            : MenuNavigationBar(isDark: false, selectedIndex: 0),
+      ),
+      (route) => false,
+    );
+  }
+
+  Future<void> _handleRegister() async {
+    if (_registerUsername.text.isEmpty ||
+        _registerEmail.text.isEmpty ||
+        _registerPassword.text.isEmpty ||
+        _registerConfirm.text.isEmpty) {
+      _showMessage("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+
+    if (_registerPassword.text != _registerConfirm.text) {
+      _showMessage("Mật khẩu không khớp");
+      return;
+    }
+
+    final result = await FirebaseDBManager.authService.register(
+      username: _registerUsername.text.trim(),
+      email: _registerEmail.text.trim(),
+      password: _registerPassword.text.trim(),
+    );
+
+    if (result == "OK") {
+      _showMessage("Đăng ký thành công!");
+      _pageController.animateToPage(0,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut);
+    } else {
+      _showMessage(result!);
+    }
   }
 }

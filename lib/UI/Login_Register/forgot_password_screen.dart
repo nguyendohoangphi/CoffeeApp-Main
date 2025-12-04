@@ -24,11 +24,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "Nhập email để nhận liên kết đặt lại mật khẩu",
-              style: TextStyle(color: Colors.white, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
+            // const Text(
+            //   "Nhập email để nhận liên kết đặt lại mật khẩu",
+            //   style: TextStyle(color: Colors.white, fontSize: 16),
+            //   textAlign: TextAlign.center,
+            // ),
             const SizedBox(height: 20),
 
             TextField(

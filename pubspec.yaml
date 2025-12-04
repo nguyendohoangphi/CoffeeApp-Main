@@ -34,7 +34,7 @@ dependencies:
   fl_chart: ^1.0.0
   audioplayers: ^6.5.1
   carousel_slider: ^5.0.0
-  
+  badges: ^3.1.2
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +44,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/background_coffee.jpg
+    - assets/images/logo.png
     - assets/images/banner/firstbanner.jpg
     - assets/images/banner/secondbanner.jpg
     - assets/images/banner/thirdbanner.jpg
@@ -79,6 +81,7 @@ flutter:
     - assets/background/loading.json
     - assets/background/coffee_pour.json
     - assets/audio/coffee_pour_sound.mp3
+    
 fonts:
   - family: Poppins
     fonts:

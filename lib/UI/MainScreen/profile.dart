@@ -8,7 +8,6 @@ import 'package:coffeeapp/UI/Login_Register/coffeeloginregisterscreen.dart';
 import 'package:coffeeapp/UI/Order/cart.dart';
 import 'package:coffeeapp/UI/Order/historyorder.dart';
 import 'package:coffeeapp/Entity/userdetail.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class Profile extends StatefulWidget {
   final bool isDark;
@@ -28,6 +27,7 @@ class _ProfileState extends State<Profile> {
     GlobalData.userDetail = (await FirebaseDBManager.authService.getProfile())!;
   }
 
+  // Map hình ảnh rank
   Map<String, String> ranks = {
     'Hạng đồng': 'assets/images/rank/r1.png',
     'Hạng bạc': 'assets/images/rank/r0.png',
@@ -39,12 +39,14 @@ class _ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
-    String imageRank = ranks.entries
-        .firstWhere((element) => element.key == GlobalData.userDetail.rank)
-        .value;
+    // Xử lý an toàn nếu rank chưa load kịp
+    String imageRank = 'assets/images/rank/r1.png'; 
+    if (GlobalData.userDetail.rank.isNotEmpty && ranks.containsKey(GlobalData.userDetail.rank)) {
+       imageRank = ranks[GlobalData.userDetail.rank]!;
+    }
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.transparent, 
       body: FutureBuilder<void>(
         future: LoadData(),
         builder: (context, snapshot) {
@@ -55,158 +57,133 @@ class _ProfileState extends State<Profile> {
               ),
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 60),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
 
-                    /// Avatar
-                    Center(
-                      child: Column(
+                      /// --- AVATAR & INFO ---
+                      Stack(
+                        alignment: Alignment.bottomRight,
                         children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundImage:
-                            AssetImage(GlobalData.userDetail.photoURL),
-                          ),
-                          const SizedBox(height: 5),
-
-                          Text(
-                            GlobalData.userDetail.username,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFFFF8A00), width: 2), // Viền Cam
+                            ),
+                            child: CircleAvatar(
+                              radius: 55,
+                              backgroundImage: AssetImage(GlobalData.userDetail.photoURL),
                             ),
                           ),
-
-                          const SizedBox(height: 5),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                GlobalData.userDetail.rank,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 3, 180),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Image.asset(
-                                imageRank,
-                                width: 35,
-                                height: 35,
-                              ),
-                            ],
-                          ),
+                          // Rank Icon nhỏ ở góc avatar
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Colors.white,
+                            child: Image.asset(imageRank, width: 25, height: 25),
+                          )
                         ],
                       ),
-                    ),
+                      
+                      const SizedBox(height: 15),
 
-                    const SizedBox(height: 40),
-
-                    /// Menu
-                    Padding(
-                      padding: const EdgeInsets.all(6),
-                      child: Column(
-                        children: [
-                          MenuItem(
-                            title: "Thông tin tài khoản",
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      UserInformation(isDark: widget.isDark, index: 2),
-                                ),
-                              );
-                            },
-                          ),
-                          MenuItem(
-                            title: "Giỏ hàng",
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      Cart(isDark: widget.isDark, index: 2),
-                                ),
-                              );
-                            },
-                          ),
-                          MenuItem(
-                            title: "Lịch sử đơn hàng",
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      HistoryOrder(isDark: widget.isDark, index: 2),
-                                ),
-                              );
-                            },
-                          ),
-                          MenuItem(title: "Cài đặt"),
-                          MenuItem(title: "Về app"),
-                          
-                        MenuItem(
-                          title: "Đăng xuất",
-                          onTap: () async {
-                            final navigator = Navigator.of(context);
-
-                            try {
-                              // ✅ Gọi logout chính thức
-                              await FirebaseDBManager.authService.logout();
-
-                              // ✅ Reset lại session cho chắc (đợi Firebase clear cache)
-                              await Future.delayed(const Duration(milliseconds: 300));
-
-                              // ✅ Xóa dữ liệu user hiện tại trong GlobalData
-                              GlobalData.userDetail = UserDetail(
-                                uid: "",
-                                username: "",
-                                email: "",
-                                password: "",
-                                photoURL: "",
-                                rank: "",
-                                point: 0,
-                                role: "",
-                              );
-
-                              // ✅ Quay lại màn hình login, xóa toàn bộ navigation stack
-                              navigator.pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (_) => const CoffeeLoginRegisterScreen(),
-                                ),
-                                (route) => false,
-                              );
-                            } catch (e) {
-                              debugPrint("❌ Lỗi khi đăng xuất: $e");
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Đăng xuất thất bại!")),
-                                );
-                              }
-                            }
-                          },
+                      Text(
+                        GlobalData.userDetail.username,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white, // Đổi thành màu trắng
                         ),
-
-
-
-
-
-
-
-
-
-
-                        ],
                       ),
-                    ),
 
-                    const SizedBox(height: 10),
-                  ],
+                      const SizedBox(height: 5),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF8A00).withOpacity(0.2), // Nền cam mờ
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          GlobalData.userDetail.rank,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFF8A00), 
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      /// --- MENU OPTIONS ---
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3B3D45).withOpacity(0.6), // Màu nền giống Category Button ở Home
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                             BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)
+                          ]
+                        ),
+                        child: Column(
+                          children: [
+                            _buildMenuRow(context, "Thông tin tài khoản", Icons.person_outline, () {
+                               Navigator.push(context, MaterialPageRoute(builder: (context) => UserInformation(isDark: widget.isDark, index: 2)));
+                            }),
+                            _buildDivider(),
+                            
+                            _buildMenuRow(context, "Giỏ hàng", Icons.shopping_bag_outlined, () {
+                               Navigator.push(context, MaterialPageRoute(builder: (context) => Cart(isDark: widget.isDark, index: 2)));
+                            }),
+                             _buildDivider(),
+
+                            _buildMenuRow(context, "Lịch sử đơn hàng", Icons.history, () {
+                               Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryOrder(isDark: widget.isDark, index: 2)));
+                            }),
+                             _buildDivider(),
+
+                            _buildMenuRow(context, "Cài đặt", Icons.settings_outlined, () {}),
+                             _buildDivider(),
+                             
+                            _buildMenuRow(context, "Về ứng dụng", Icons.info_outline, () {}),
+                             _buildDivider(),
+
+                            // Nút Đăng xuất
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(10)
+                                ),
+                                child: const Icon(Icons.logout, color: Colors.redAccent),
+                              ),
+                              title: const Text("Đăng xuất", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                              onTap: () async {
+                                final navigator = Navigator.of(context);
+                                try {
+                                  await FirebaseDBManager.authService.logout();
+                                  await Future.delayed(const Duration(milliseconds: 300));
+                                  GlobalData.userDetail = UserDetail(uid: "", username: "", email: "", password: "", photoURL: "", rank: "", point: 0, role: "");
+                                  navigator.pushAndRemoveUntil(
+                                    MaterialPageRoute(builder: (_) => const CoffeeLoginRegisterScreen()),
+                                    (route) => false,
+                                  );
+                                } catch (e) {
+                                  // Error handling
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 100), // Khoảng trống dưới cùng
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -214,5 +191,29 @@ class _ProfileState extends State<Profile> {
         },
       ),
     );
+  }
+
+  Widget _buildMenuRow(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10)
+        ),
+        child: Icon(icon, color: Colors.white70),
+      ),
+      title: Text(
+        title, 
+        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white24, size: 16),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(color: Colors.white.withOpacity(0.1), height: 1);
   }
 }
