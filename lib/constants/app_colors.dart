@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // ================= BACKGROUND =================
-  static const Color bg = Colors.white;
+  // 1. Tông màu chính (Brand Colors)
+  static const Color primary = Color(0xFFFF8A00); // Cam ấm (Nút chính, Icon active)
+  static const Color secondary = Color(0xFF4E342E); // Nâu cà phê đậm (Text tiêu đề, Background tối)
+  static const Color accent = Color(0xFF81C784); // Xanh lá nhẹ (Badge, Success, Vegetarian)
 
-  // ================= TEXT =================
-  static const Color textGrey = Color(0xFF9E9E9E);
-  static const Color textDark = Color(0xFF424242);
+  // 2. Tông màu nền (Backgrounds)
+  static const Color backgroundLight = Color(0xFFFFF9F0); // Kem sữa (Nền sáng chủ đạo)
+  static const Color backgroundDark = Color(0xFF2C2C2C); // Xám đen ấm (Nền tối chủ đạo)
+  static const Color cardLight = Colors.white;
+  static const Color cardDark = Color(0xFF3B3D45); // Màu card chế độ tối (như bạn thích ở Profile)
 
-  // ================= LINES =================
-  static const Color line = Color(0xFFE0E0E0);
+  // 3. Tông màu chữ (Text)
+  static const Color textMainLight = Color(0xFF2D2D2D); // Chữ đen trên nền sáng
+  static const Color textSubLight = Color(0xFF757575); // Chữ phụ
+  static const Color textMainDark = Colors.white; // Chữ trắng trên nền tối
+  static const Color textSubDark = Colors.white70;
 
-  // ================= BUTTONS =================
-  static const Color buttonGrey = Color(0xFFE0E0E0);
-  static const Color shopeeOrange = Color(0xFFEE4D2D); 
-
-  // ================= ICONS =================
-  static const Color iconGrey = Color(0xFF9E9E9E);
-
-  // ================= EXTRA =================
-  static const Color bgLight = Color(0xFFF5F5F5);
+  // 4. Gradient (Cho đẹp, hiện đại)
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [Color(0xFFFF9E44), Color(0xFFFF8A00)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }

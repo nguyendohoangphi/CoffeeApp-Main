@@ -1,9 +1,7 @@
 import 'dart:ui';
-
-import 'package:animate_gradient/animate_gradient.dart';
-import 'package:coffeeapp/CustomCard/colorsetupbackground.dart';
 import 'package:coffeeapp/Entity/cartitem.dart';
 import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
+import 'package:coffeeapp/constants/app_colors.dart'; // Import màu
 import 'package:flutter/material.dart';
 import 'package:coffeeapp/CustomCard/orderItemcard.dart';
 import 'package:coffeeapp/Entity/global_data.dart';
@@ -20,54 +18,33 @@ class HistoryOrder extends StatefulWidget {
 }
 
 class _HistoryOrderState extends State<HistoryOrder> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
   late List<OrderItem> orderItemList = [];
   late List<CartItem> cartItemList = [];
-  // ignore: non_constant_identifier_names
-  Future<void> LoadData() async {
-    orderItemList = await FirebaseDBManager.orderService.getOrdersByEmail(
-      GlobalData.userDetail.email,
-    );
 
+  // Theme Helpers
+  Color get backgroundColor => widget.isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+  Color get textColor => widget.isDark ? AppColors.textMainDark : AppColors.textMainLight;
+
+  Future<void> LoadData() async {
+    orderItemList = await FirebaseDBManager.orderService.getOrdersByEmail(GlobalData.userDetail.email);
     for (OrderItem orderItem in orderItemList) {
-      cartItemList.addAll(
-        await FirebaseDBManager.cartService.getCartItemsByOrder(orderItem.id),
-      );
+      cartItemList.addAll(await FirebaseDBManager.cartService.getCartItemsByOrder(orderItem.id));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: AnimateGradient(
-          primaryBegin: Alignment.topLeft,
-          primaryEnd: Alignment.bottomRight,
-          secondaryBegin: Alignment.bottomRight,
-          secondaryEnd: Alignment.topLeft,
-          duration: const Duration(seconds: 6),
-          primaryColors: widget.isDark
-              ? ColorSetupBackground.primaryColorsDark
-              : ColorSetupBackground.primaryColorsLight,
-          secondaryColors: widget.isDark
-              ? ColorSetupBackground.secondaryColorsDark
-              : ColorSetupBackground.secondaryColorsLight,
-          child: AppBar(
-            backgroundColor: Colors.transparent,
-
-            elevation: 4.0,
-            // ignore: deprecated_member_use
-            shadowColor: Colors.black.withOpacity(0.3),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () {
-                Navigator.pop(context);
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: textColor),
+          onPressed: () {
+            Navigator.pop(context);
+            // Có thể bạn không cần push lại MenuNavigationBar nếu chỉ muốn back
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -76,60 +53,51 @@ class _HistoryOrderState extends State<HistoryOrder> {
                       selectedIndex: widget.index,
                     ),
                   ),
-                );
-              }, // Add navigation logic
-            ),
-            title: Text('Lịch sử đơn hàng'),
-            centerTitle: true,
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 12.0),
-                child: CircleAvatar(
-                  backgroundImage: AssetImage(
-                    GlobalData.userDetail.photoURL,
-                  ), // User image
-                ),
-              ),
-            ],
-          ),
+                );          },
         ),
+        title: Text("Lịch sử đơn hàng", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor)),
       ),
-      body: AnimateGradient(
-        primaryBegin: Alignment.topLeft,
-        primaryEnd: Alignment.bottomRight,
-        secondaryBegin: Alignment.bottomRight,
-        secondaryEnd: Alignment.topLeft,
-        duration: const Duration(seconds: 6),
-        primaryColors: widget.isDark
-            ? ColorSetupBackground.primaryColorsDark
-            : ColorSetupBackground.primaryColorsLight,
-        secondaryColors: widget.isDark
-            ? ColorSetupBackground.secondaryColorsDark
-            : ColorSetupBackground.secondaryColorsLight,
-        child: FutureBuilder<void>(
-          future: LoadData(),
-          builder: (context, asyncSnapshot) {
-            return ScrollConfiguration(
-              behavior: ScrollConfiguration.of(context).copyWith(
-                dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-              ),
-              child: ListView.builder(
-                itemCount: orderItemList.length, // Change to your data length
-                itemBuilder: (context, index) {
-                  OrderItem orderItem = orderItemList[index];
-                  orderItem.cartItems = cartItemList
-                      .where((element) => element.idOrder == orderItem.id)
-                      .toList();
-                  return OrderItemCard(
-                    orderItem: orderItem,
-                    isDark: widget.isDark,
-                    index: widget.index,
-                  );
-                },
+      body: FutureBuilder<void>(
+        future: LoadData(),
+        builder: (context, asyncSnapshot) {
+          if (asyncSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+          }
+          if (orderItemList.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.receipt_long_outlined, size: 60, color: Colors.grey[400]),
+                  const SizedBox(height: 10),
+                  Text("Chưa có đơn hàng nào", style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                ],
               ),
             );
-          },
-        ),
+          }
+
+          return ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(20),
+              itemCount: orderItemList.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 20),
+              itemBuilder: (context, index) {
+                OrderItem orderItem = orderItemList[index];
+                orderItem.cartItems = cartItemList.where((element) => element.idOrder == orderItem.id).toList();
+                
+                // Trả về widget OrderItemCard 
+                //  gọi OrderItemCard 
+                return OrderItemCard(
+                  orderItem: orderItem,
+                  isDark: widget.isDark,
+                  index: widget.index,
+                );
+              },
+              
+            ),
+          );
+        },
       ),
     );
   }

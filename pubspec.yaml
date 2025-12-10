@@ -35,7 +35,9 @@ dependencies:
   audioplayers: ^6.5.1
   carousel_slider: ^5.0.0
   badges: ^3.1.2
-
+  flutter_dotenv: ^6.0.0
+  google_generative_ai: ^0.4.7
+    
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -92,3 +94,4 @@ fonts:
     fonts:
       - asset: assets/fonts/Inter-Regular.ttf
       - asset: assets/fonts/Inter-Medium.ttf
+

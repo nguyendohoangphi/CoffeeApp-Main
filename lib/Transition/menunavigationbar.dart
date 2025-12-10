@@ -2,6 +2,7 @@ import 'package:animate_gradient/animate_gradient.dart';
 import 'package:coffeeapp/CustomCard/colorsetupbackground.dart';
 import 'package:coffeeapp/Entity/global_data.dart';
 import 'package:coffeeapp/UI/Order/cart.dart';
+import 'package:coffeeapp/constants/app_colors.dart'; // Import file màu mới
 import 'package:flutter/material.dart';
 import 'package:coffeeapp/UI/MainScreen/category.dart';
 import 'package:coffeeapp/UI/MainScreen/home.dart';
@@ -53,78 +54,65 @@ class _MenuNavigationBarState extends State<MenuNavigationBar> {
     ];
 
     return Scaffold(
-      extendBody: true, 
-      backgroundColor: Colors.transparent, 
+      extendBody: true, // Để nền tràn xuống dưới bottom bar
+      backgroundColor: _isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
 
+      // --- NÚT GIỎ HÀNG NỔI (Floating Cart) ---
       floatingActionButton: _selectedIndex != 2
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        Cart(isDark: _isDark, index: _selectedIndex),
+                    builder: (context) => Cart(isDark: _isDark, index: _selectedIndex),
                   ),
                 ).then((value) => refreshCart());
               },
-              backgroundColor: const Color(0xFFFF8A00),
+              backgroundColor: AppColors.primary,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: badges.Badge(
                 position: badges.BadgePosition.topEnd(top: -12, end: -10),
                 showBadge: GlobalData.cartItemList.isNotEmpty,
                 badgeContent: Text(
                   GlobalData.cartItemList.length.toString(),
-                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                 ),
-                badgeStyle: const badges.BadgeStyle(badgeColor: Colors.red),
-                child: const Icon(Icons.shopping_cart, color: Colors.white),
+                child: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
               ),
             )
           : null,
-      
-      body: AnimateGradient(
-        primaryBegin: Alignment.topLeft,
-        primaryEnd: Alignment.bottomRight,
-        secondaryBegin: Alignment.bottomRight,
-        secondaryEnd: Alignment.topLeft,
-        duration: const Duration(seconds: 6),
-        primaryColors: _isDark
-            ? ColorSetupBackground.primaryColorsDark
-            : ColorSetupBackground.primaryColorsLight,
-        secondaryColors: _isDark
-            ? ColorSetupBackground.secondaryColorsDark
-            : ColorSetupBackground.secondaryColorsLight,
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: pages,
-        ),
+
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: pages,
       ),
 
+      // --- THANH ĐIỀU HƯỚNG HIỆN ĐẠI ---
       bottomNavigationBar: SafeArea(
         bottom: true,
         child: Container(
-          margin: const EdgeInsets.fromLTRB(15, 0, 15, 15), 
+          margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           decoration: BoxDecoration(
-            // --- ĐÃ ĐỔI MÀU TẠI ĐÂY ---
-            // Dùng màu 0xFF3B3D45 để giống hệt cái khung trong Profile
-            color: _isDark ? const Color(0xFF3B3D45) : Colors.white, 
-            
+            color: _isDark ? AppColors.cardDark : Colors.white,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: GNav(
               gap: 8,
               backgroundColor: Colors.transparent,
-              color: Colors.grey[400], // Màu icon chưa chọn (sáng hơn chút cho dễ nhìn trên nền xám)
+              color: _isDark ? Colors.grey[400] : Colors.grey[600],
               activeColor: Colors.white,
-              tabBackgroundColor: const Color(0xFFFF8A00), 
+              iconSize: 24,
+              tabBackgroundColor: AppColors.primary,
               padding: const EdgeInsets.all(12),
               selectedIndex: _selectedIndex,
               onTabChange: (index) {
@@ -133,18 +121,9 @@ class _MenuNavigationBarState extends State<MenuNavigationBar> {
                 });
               },
               tabs: const [
-                GButton(
-                  icon: Icons.home_rounded,
-                  text: 'Trang chủ',
-                ),
-                GButton(
-                  icon: Icons.grid_view_rounded,
-                  text: 'Danh mục',
-                ),
-                GButton(
-                  icon: Icons.person_rounded,
-                  text: 'Tài khoản',
-                ),
+                GButton(icon: Icons.home_rounded, text: 'Trang chủ'),
+                GButton(icon: Icons.grid_view_rounded, text: 'Thực đơn'),
+                GButton(icon: Icons.person_rounded, text: 'Tài khoản'),
               ],
             ),
           ),

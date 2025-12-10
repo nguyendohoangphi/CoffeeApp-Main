@@ -1,14 +1,15 @@
 import 'dart:ui';
 import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
+import 'package:coffeeapp/constants/app_colors.dart'; 
 import 'package:flutter/material.dart';
 import 'package:coffeeapp/Entity/categoryproduct.dart';
 import 'package:coffeeapp/UI/Product/product_list.dart';
 
 class Category extends StatefulWidget {
-  late bool isDark;
+  final bool isDark;
   final ValueChanged<bool> onDarkChanged;
 
-  Category({required this.isDark, required this.onDarkChanged, super.key});
+  const Category({required this.isDark, required this.onDarkChanged, super.key});
 
   @override
   State<Category> createState() => _CategoryState();
@@ -17,171 +18,236 @@ class Category extends StatefulWidget {
 class _CategoryState extends State<Category> {
   late List<CategoryProduct> categories = [];
   late List<CategoryProduct> categoriesSearch = [];
+  
+  // Màu sắc lấy từ AppColors
+  Color get backgroundColor => widget.isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+  Color get textColor => widget.isDark ? AppColors.textMainDark : AppColors.textMainLight;
 
   @override
   void initState() {
     super.initState();
   }
 
-  Future<void> LoadData() async {
+  Future<void> loadData() async {
     categories = await FirebaseDBManager.categoryProductService.getCategoryProductList();
   }
 
   void toggleDarkMode() {
-    setState(() {
-      widget.isDark = !widget.isDark;
-    });
-    widget.onDarkChanged(widget.isDark);
+    widget.onDarkChanged(!widget.isDark);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Layout Calculation
-    final double itemHeight = 160; 
-    final double itemWidth = (MediaQuery.of(context).size.width - 48) / 2; 
-
     return Scaffold(
-      backgroundColor: Colors.transparent, // Để lộ nền Gradient của MenuNavigationBar
+      backgroundColor: backgroundColor,
       body: FutureBuilder<void>(
-        future: LoadData(),
+        future: loadData(),
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (categories.isEmpty && snapshot.connectionState == ConnectionState.waiting) {
-             return const Center(child: CircularProgressIndicator(color: Color(0xFFFF8A00)));
+          // Loading state
+          if (snapshot.connectionState == ConnectionState.waiting && categories.isEmpty) {
+             return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           }
-          
+
           return SafeArea(
             child: ScrollConfiguration(
               behavior: ScrollConfiguration.of(context).copyWith(
                 dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- HEADER TITLE GIỐNG HOME ---
-                    const Text(
-                      "Tìm kiếm món ngon",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // --- SEARCH BAR (STYLE TỪ HOME) ---
-                    SearchAnchor(
-                      builder: (context, controller) {
-                        return SearchBar(
-                          controller: controller,
-                          hintText: "Tìm danh mục...",
-                          // Style đồng bộ với Home
-                          textStyle: MaterialStateProperty.all(const TextStyle(color: Color.fromARGB(246, 136, 136, 136))),
-                          surfaceTintColor: MaterialStateProperty.all(Colors.white),
-                          backgroundColor: MaterialStateProperty.all(Colors.white),
-                          shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          )),
-                          onTap: () => controller.openView(),
-                          onChanged: (_) => controller.openView(),
-                          onSubmitted: (value) {
-                             // Logic search giữ nguyên của bạn
-                             if (value.trim().isEmpty || categoriesSearch.isEmpty) return;
-                             // ... (Giữ nguyên logic chuyển trang của bạn)
-                          },
-                          leading: const Icon(Icons.search, color: Color(0xFFFF8A00)), // Icon Cam
-                          trailing: <Widget>[
-                            Tooltip(
-                              message: widget.isDark ? 'Chế độ tối' : 'Chế độ sáng',
-                              child: IconButton(
-                                isSelected: widget.isDark,
-                                onPressed: () => setState(toggleDarkMode),
-                                icon: const Icon(Icons.wb_sunny_outlined, color: Colors.orange),
-                                selectedIcon: const Icon(Icons.brightness_2_outlined, color: Colors.blue),
-                              ),
+                    // --- HEADER ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Thực đơn",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        // Nút chuyển chế độ sáng tối
+                        Container(
+                          decoration: BoxDecoration(
+                            color: widget.isDark ? AppColors.cardDark : Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2))
+                            ]
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              widget.isDark ? Icons.nights_stay : Icons.wb_sunny,
+                              color: AppColors.primary,
                             ),
-                          ],
-                        );
-                      },
-                      suggestionsBuilder: (context, controller) {
-                         // Logic suggestion giữ nguyên
-                         final query = controller.text.toLowerCase();
-                          categoriesSearch = categories
-                              .where((element) => element.displayName.toLowerCase().contains(query.trim()))
-                              .toList();
-                          
-                          if (categoriesSearch.isEmpty) {
-                            return [const ListTile(title: Text('Không tìm thấy kết quả'))];
-                          }
-                          return List<ListTile>.generate(categoriesSearch.length, (index) {
-                              final entry = categoriesSearch[index];
-                              return ListTile(
-                                leading: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.asset(entry.imageUrl, width: 40, height: 40, fit: BoxFit.cover),
-                                ),
-                                title: Text(entry.displayName),
-                                onTap: () {
-                                  controller.closeView(entry.displayName);
-                                },
-                              );
-                          });
-                      },
+                            onPressed: toggleDarkMode,
+                          ),
+                        )
+                      ],
                     ),
-
                     const SizedBox(height: 20),
 
-                    // --- CATEGORY GRID ---
-                    Expanded(
-                      child: GridView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.only(bottom: 100), // Tránh bị che bởi BottomBar
-                        itemCount: categories.length,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.85, // Điều chỉnh tỷ lệ để hình đẹp hơn
-                        ),
-                        itemBuilder: (context, index) {
-                          final cat = categories[index];
-                          return GestureDetector(
-                            onTap: () {
+                    // --- SEARCH BAR (Đã đồng bộ Logic cũ) ---
+                    SearchAnchor(
+                      builder: (context, controller) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: widget.isDark ? AppColors.cardDark : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                            ],
+                          ),
+                          child: SearchBar(
+                            controller: controller,
+                            hintText: "Tìm danh mục...",
+                            hintStyle: MaterialStateProperty.all(TextStyle(color: Colors.grey[400])),
+                            textStyle: MaterialStateProperty.all(TextStyle(color: textColor)),
+                            backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                            shadowColor: MaterialStateProperty.all(Colors.transparent),
+                            elevation: MaterialStateProperty.all(0),
+                            leading: const Icon(Icons.search, color: AppColors.primary),
+                            onTap: () => controller.openView(),
+                            onChanged: (_) => controller.openView(),
+                            
+                            // ===============================================
+                            // LOGIC SEARCH CŨ CỦA BẠN (Đã đồng bộ)
+                            // ===============================================
+                            onSubmitted: (value) async {
+                              if (value.trim().isEmpty || categoriesSearch.isEmpty) {
+                                return; // Do nothing if empty
+                              }
+                              String typeSearch = '';
+                              if (categoriesSearch
+                                  .where(
+                                    (element) =>
+                                        element.displayName.toLowerCase().trim() ==
+                                        value.trim().toLowerCase(),
+                                  )
+                                  .isNotEmpty) {
+                                typeSearch = categoriesSearch
+                                    .firstWhere(
+                                      (element) =>
+                                          element.displayName.toLowerCase().trim() ==
+                                          value.trim().toLowerCase(),
+                                    )
+                                    .name;
+                              } else {
+                                typeSearch = categoriesSearch[0].name;
+                              }
+
+                              controller.closeView(value);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ProductList(
                                     nameProduct: "",
-                                    productType: cat.name,
+                                    productType: typeSearch,
                                     isDark: widget.isDark,
                                     index: 1,
                                   ),
                                 ),
                               );
                             },
+                            // ===============================================
+                          ),
+                        );
+                      },
+                      suggestionsBuilder: (context, controller) {
+                        final query = controller.text.toLowerCase();
+                        categoriesSearch = categories
+                            .where((e) => e.displayName.toLowerCase().contains(query.trim()))
+                            .toList();
+
+                        if (categoriesSearch.isEmpty) {
+                          return [ListTile(title: Text('Không tìm thấy kết quả', style: TextStyle(color: textColor)))];
+                        }
+                        return List<ListTile>.generate(categoriesSearch.length, (index) {
+                          final entry = categoriesSearch[index];
+                          return ListTile(
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(entry.imageUrl, width: 40, height: 40, fit: BoxFit.cover),
+                            ),
+                            title: Text(entry.displayName, style: TextStyle(color: textColor)),
+                            onTap: () {
+                              // Logic cũ: Chỉ đóng view và điền text
+                              setState(() {
+                                controller.closeView(entry.displayName);
+                              });
+                            },
+                          );
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // --- GRID DANH MỤC ---
+                    Expanded(
+                      child: GridView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 100),
+                        itemCount: categories.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2, 
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.85, 
+                        ),
+                        itemBuilder: (context, index) {
+                          final cat = categories[index];
+                          return GestureDetector(
+                            onTap: () async {
+                              // ===============================================
+                              // LOGIC CHUYỂN TRANG CŨ CỦA BẠN (Đã đồng bộ)
+                              // ===============================================
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProductList(
+                                    nameProduct: "",
+                                    // Logic tìm productType chính xác từ list gốc
+                                    productType: categories
+                                        .firstWhere(
+                                          (e) =>
+                                              e.displayName.toLowerCase() ==
+                                              categories.elementAt(index).displayName.trim().toLowerCase(),
+                                        )
+                                        .name,
+                                    isDark: widget.isDark,
+                                    index: 1,
+                                  ),
+                                ),
+                              );
+                              // ===============================================
+                            },
                             child: Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(24),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
                                   )
                                 ],
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(24),
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    // Image
+                                    // 1. Ảnh nền
                                     Image.asset(
                                       cat.imageUrl,
                                       fit: BoxFit.cover,
                                     ),
-                                    // Gradient Overlay (Để chữ dễ đọc hơn)
+                                    // 2. Lớp phủ đen mờ (Gradient) giúp chữ nổi bật
                                     Container(
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
@@ -189,23 +255,24 @@ class _CategoryState extends State<Category> {
                                           end: Alignment.bottomCenter,
                                           colors: [
                                             Colors.transparent,
-                                            Colors.black.withOpacity(0.8),
+                                            Colors.black.withOpacity(0.7),
                                           ],
-                                          stops: const [0.6, 1.0],
+                                          stops: const [0.5, 1.0],
                                         ),
                                       ),
                                     ),
-                                    // Text
+                                    // 3. Tên danh mục
                                     Align(
                                       alignment: Alignment.bottomCenter,
                                       child: Padding(
-                                        padding: const EdgeInsets.all(12.0),
+                                        padding: const EdgeInsets.all(16.0),
                                         child: Text(
                                           cat.displayName,
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                            fontSize: 18,
+                                            letterSpacing: 0.5,
                                           ),
                                           textAlign: TextAlign.center,
                                         ),

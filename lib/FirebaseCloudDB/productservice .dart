@@ -17,7 +17,7 @@ class ProductService {
     }
   }
 
-  // READ - Single Product (optional)
+  // READ - Single Product
   Future<Product> getProductByName(String name) async {
     try {
       final querySnapshot = await _productRef
@@ -34,7 +34,69 @@ class ProductService {
     } catch (e, stackTrace) {
       debugPrint('Error getting product by name: $e');
       debugPrintStack(stackTrace: stackTrace);
-      rethrow; // or throw Exception('Failed to get product by name: $e');
+      rethrow;
+    }
+  }
+
+  // --- [PHẦN BẠN CẦN THÊM LẠI] ---
+  // READ - Get All Products (Dùng cho Admin Page)
+  Future<List<Product>> getProducts() async {
+    try {
+      final snapshot = await _productRef.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No products found in collection");
+        return [];
+      }
+
+      // Dùng map có xử lý lỗi để tránh crash nếu 1 sản phẩm bị lỗi data
+      return snapshot.docs.map((doc) {
+        try {
+          return Product.fromJson(doc.data() as Map<String, dynamic>);
+        } catch (e) {
+          print("Lỗi data sản phẩm (ID: ${doc.id}): $e");
+          return null;
+        }
+      })
+      .where((item) => item != null) // Lọc bỏ item lỗi
+      .cast<Product>()
+      .toList();
+      
+    } catch (e) {
+      print("Lỗi lấy danh sách sản phẩm: $e");
+      return [];
+    }
+  }
+  // ---------------------------------
+
+  // READ - Search (Dùng cho Home Page )
+  Future<List<Product>> searchProductsByName(String query) async {
+    try {
+      final snapshot = await _productRef.get();
+
+      if (snapshot.docs.isEmpty) {
+        return [];
+      }
+
+      final keyword = query.trim().toLowerCase();
+
+      return snapshot.docs.map((doc) {
+        try {
+          return Product.fromJson(doc.data() as Map<String, dynamic>);
+        } catch (e) {
+          print("Lỗi parse sản phẩm search: ${doc.id}");
+          return null;
+        }
+      })
+      .where((product) => product != null)
+      .cast<Product>()
+      .where((product) {
+        return product.name.toLowerCase().contains(keyword);
+      })
+      .toList();
+    } catch (e) {
+      print("Lỗi tìm kiếm: $e");
+      return [];
     }
   }
 
@@ -43,7 +105,7 @@ class ProductService {
     final snapshot = await _productRef.where('type', isEqualTo: type).get();
 
     if (snapshot.docs.isEmpty) {
-      print("No products found for type: ${enumToString(type)}");
+      // print("No products found for type: $type");
       return [];
     }
 
@@ -52,6 +114,7 @@ class ProductService {
         .toList();
   }
 
+  // READ - Top 10 Rated
   Future<List<Product>> getTop10RatedProducts() async {
     final snapshot = await _productRef
         .orderBy('rating', descending: true)
@@ -59,7 +122,6 @@ class ProductService {
         .get();
 
     if (snapshot.docs.isEmpty) {
-      print("No products found for top 10 ratings");
       return [];
     }
 
@@ -75,38 +137,6 @@ class ProductService {
         .get();
 
     if (snapshot.docs.isEmpty) {
-      print("No recently created products found");
-      return [];
-    }
-
-    return snapshot.docs
-        .map((doc) => Product.fromJson(doc.data() as Map<String, dynamic>))
-        .toList();
-  }
-
-  // READ - All Products NAME
-  Future<List<Product>> searchProductsByName(String query) async {
-    final snapshot = await _productRef.get();
-
-    if (snapshot.docs.isEmpty) {
-      print("No products found in collection for searching name");
-      return [];
-    }
-
-    return snapshot.docs
-        .map((doc) => Product.fromJson(doc.data() as Map<String, dynamic>))
-        .where(
-          (product) => product.name.toLowerCase().contains(query.toLowerCase()),
-        )
-        .toList();
-  }
-
-  // READ - All Products
-  Future<List<Product>> getProducts() async {
-    final snapshot = await _productRef.get();
-
-    if (snapshot.docs.isEmpty) {
-      print("No products found in collection");
       return [];
     }
 

@@ -12,7 +12,7 @@ class CouponService {
     final docRef = _couponRef.doc(email);
 
     await docRef.update({newCode: newCode}).catchError((e) async {
-      // Nếu document chưa tồn tại, tạo mới
+      // If document no exits, make it
       await docRef.set({newCode: newCode});
     });
   }

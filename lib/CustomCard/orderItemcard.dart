@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:ui';
 import 'package:coffeeapp/Entity/Product.dart';
 import 'package:coffeeapp/Entity/productfavourite.dart';

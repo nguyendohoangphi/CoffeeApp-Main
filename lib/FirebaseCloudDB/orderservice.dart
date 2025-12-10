@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffeeapp/Entity/Product.dart';
 import 'package:coffeeapp/Entity/orderitem.dart';

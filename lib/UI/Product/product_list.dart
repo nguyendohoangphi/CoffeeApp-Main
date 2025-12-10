@@ -1,26 +1,22 @@
 import 'dart:ui';
-
-import 'package:animate_gradient/animate_gradient.dart';
-import 'package:coffeeapp/CustomCard/colorsetupbackground.dart';
-import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
-import 'package:flutter/material.dart';
 import 'package:coffeeapp/CustomCard/productcard_list.dart';
 import 'package:coffeeapp/Entity/Product.dart';
-import 'package:coffeeapp/Transition/menunavigationbar.dart';
+import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
+import 'package:coffeeapp/constants/app_colors.dart'; 
+import 'package:flutter/material.dart';
 
-// ignore: must_be_immutable
 class ProductList extends StatefulWidget {
-  late int index;
-  late bool isDark;
   final String nameProduct;
   final String productType;
+  final bool isDark;
+  final int index;
 
-  ProductList({
-    required this.index,
+  const ProductList({
+    super.key,
     required this.nameProduct,
     required this.productType,
     required this.isDark,
-    super.key,
+    required this.index,
   });
 
   @override
@@ -28,243 +24,110 @@ class ProductList extends StatefulWidget {
 }
 
 class _ProductListState extends State<ProductList> {
-  void toggleDarkMode() {
-    setState(() {
-      widget.isDark = !widget.isDark;
-    });
-  }
+  late List<Product> productList = [];
+  bool isLoading = true;
 
-  late List<Product> productFiltered = [];
+  // Theme Helpers
+  Color get backgroundColor => widget.isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+  Color get textColor => widget.isDark ? AppColors.textMainDark : AppColors.textMainLight;
 
   @override
   void initState() {
     super.initState();
+    _loadData();
   }
 
-  // ignore: non_constant_identifier_names
-  Future<void> LoadData() async {
-    if (widget.nameProduct != "") {
-      productFiltered = await FirebaseDBManager.productService
-          .searchProductsByName(widget.nameProduct);
+  Future<void> _loadData() async {
+    List<Product> fetchedList = [];
+    if (widget.nameProduct.isNotEmpty) {
+      // Chế độ Tìm kiếm
+      fetchedList = await FirebaseDBManager.productService.searchProductsByName(widget.nameProduct);
+    } else {
+      // Chế độ Danh mục
+      fetchedList = await FirebaseDBManager.productService.getProductsByType(widget.productType);
     }
 
-    if (widget.productType != "") {
-      productFiltered = await FirebaseDBManager.productService
-          .getProductsByType(widget.productType);
+    if (mounted) {
+      setState(() {
+        productList = fetchedList;
+        isLoading = false;
+      });
     }
   }
-
-  late List<Product> productSearchList = [];
 
   @override
   Widget build(BuildContext context) {
+    // Xác định tiêu đề trang
+    String title = widget.nameProduct.isNotEmpty 
+        ? "Kết quả: \"${widget.nameProduct}\"" 
+        : widget.productType;
+
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: AnimateGradient(
-          primaryBegin: Alignment.topLeft,
-          primaryEnd: Alignment.bottomRight,
-          secondaryBegin: Alignment.bottomRight,
-          secondaryEnd: Alignment.topLeft,
-          duration: const Duration(seconds: 6),
-          primaryColors: widget.isDark
-              ? ColorSetupBackground.primaryColorsDark
-              : ColorSetupBackground.primaryColorsLight,
-          secondaryColors: widget.isDark
-              ? ColorSetupBackground.secondaryColorsDark
-              : ColorSetupBackground.secondaryColorsLight,
-          child: AppBar(
-            backgroundColor: Colors.transparent,
-
-            elevation: 4.0,
-            // ignore: deprecated_member_use
-            shadowColor: Colors.black.withOpacity(0.3),
-            automaticallyImplyLeading: true,
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MenuNavigationBar(
-                      isDark: widget.isDark,
-                      selectedIndex: widget.index,
-                    ),
-                  ),
-                );
-              },
-              icon: Icon(Icons.arrow_back, color: Colors.white70),
-            ),
-
-            title: SizedBox(
-              width: 250,
-              height: 40,
-              child: SearchAnchor(
-                builder: (context, controller) {
-                  return SearchBar(
-                    controller: controller,
-                    onTap: () => controller.openView(),
-                    onChanged: (_) => controller.openView(),
-                    onSubmitted: (value) {
-                      if (value.trim().isEmpty || productSearchList.isEmpty) {
-                        return; // Do nothing if empty
-                      }
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Searching for: $value")),
-                      );
-                      controller.closeView(value);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MenuNavigationBar(
-                            isDark: widget.isDark,
-                            selectedIndex: widget.index,
-                          ),
-                        ),
-                      );
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProductList(
-                            nameProduct: value.trim(),
-                            productType: "",
-                            isDark: widget.isDark,
-                            index: widget.index,
-                          ),
-                        ),
-                      );
-                    },
-                    leading: const Icon(Icons.search),
-                    trailing: <Widget>[
-                      Tooltip(
-                        message: widget.isDark ? 'Chế độ tối' : 'Chế độ sáng',
-                        child: IconButton(
-                          isSelected: widget.isDark,
-                          onPressed: () => setState(toggleDarkMode),
-                          icon: const Icon(Icons.wb_sunny_outlined),
-                          selectedIcon: const Icon(Icons.brightness_2_outlined),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-
-                suggestionsBuilder: (context, controller) async {
-                  // Filter your product list by the current query
-                  final query = controller.text.toLowerCase();
-                  productSearchList = await FirebaseDBManager.productService
-                      .searchProductsByName(query);
-
-                  // Show a message if no match is found
-                  if (productSearchList.isEmpty) {
-                    return [
-                      const ListTile(title: Text('Không tìm thấy kết quả')),
-                    ];
-                  }
-
-                  return List<ListTile>.generate(productSearchList.length, (
-                    index,
-                  ) {
-                    final item = productSearchList[index].name;
-                    return ListTile(
-                      title: Text(item),
-                      onTap: () {
-                        setState(() {
-                          controller.closeView(
-                            item,
-                          ); // Optionally fill text field
-                        });
-                      },
-                    );
-                  });
-                },
-              ),
-            ),
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: textColor),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: textColor, 
+            fontWeight: FontWeight.bold, 
+            fontSize: 20
           ),
         ),
       ),
-      body: AnimateGradient(
-        primaryBegin: Alignment.topLeft,
-        primaryEnd: Alignment.bottomRight,
-        secondaryBegin: Alignment.bottomRight,
-        secondaryEnd: Alignment.topLeft,
-        duration: const Duration(seconds: 6),
-        primaryColors: widget.isDark
-            ? ColorSetupBackground.primaryColorsDark
-            : ColorSetupBackground.primaryColorsLight,
-        secondaryColors: widget.isDark
-            ? ColorSetupBackground.secondaryColorsDark
-            : ColorSetupBackground.secondaryColorsLight,
-        child: FutureBuilder<void>(
-          future: LoadData(),
-          builder: (context, asyncSnapshot) {
-            return SafeArea(
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(
-                  dragDevices: {
-                    PointerDeviceKind.touch,
-                    PointerDeviceKind.mouse,
-                  },
-                ),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      if (widget.nameProduct.isNotEmpty)
-                        Center(
-                          child: SizedBox(
-                            height: 50,
-                            child: Text(
-                              "Lọc theo tên sản phẩm: ${widget.nameProduct}",
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-
-                      if (widget.productType.isNotEmpty)
-                        Center(
-                          child: SizedBox(
-                            height: 50,
-                            child: Text(
-                              "Lọc theo loại sản phẩm: ${widget.productType}",
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-
-                      SizedBox(height: 5),
-
-                      SizedBox(
-                        height: 600,
-                        child: ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(context).copyWith(
-                            dragDevices: {
-                              PointerDeviceKind.touch,
-                              PointerDeviceKind.mouse,
-                            },
-                          ),
-                          child: ListView.builder(
-                            itemCount: productFiltered.length,
-                            itemBuilder: (context, index) {
-                              final product = productFiltered[index];
-                              return ProductcardList(
-                                product: product,
-                                isDark: widget.isDark,
-                                index: widget.index,
-                              );
-                            },
-                          ),
-                        ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : productList.isEmpty
+              ? _buildEmptyState()
+              : SafeArea(
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                    ),
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(20),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // 2 cột
+                        childAspectRatio: 0.75, // Tỷ lệ thẻ (cao hơn rộng)
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
                       ),
-                    ],
+                      itemCount: productList.length,
+                      itemBuilder: (context, index) {
+                        return ProductcardList(
+                          product: productList[index],
+                          isDark: widget.isDark,
+                          index: index,
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 80, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            "Không tìm thấy sản phẩm nào",
+            style: TextStyle(
+              color: Colors.grey[600], 
+              fontSize: 18, 
+              fontWeight: FontWeight.w500
+            ),
+          ),
+        ],
       ),
     );
   }

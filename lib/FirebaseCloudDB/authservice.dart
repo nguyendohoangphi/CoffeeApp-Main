@@ -3,13 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../Entity/userdetail.dart';
 import '../FirebaseCloudDB/tableindatabase.dart';
 
-
 class AuthService {
+  // _auth represents service Firebase Authentication(xử lý email/pass/login/lấy infor user...)
+  // _users represents collection in Firestore
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final CollectionReference _users =
-  FirebaseFirestore.instance.collection(TableInDatabase.UserDetailTable);
+  final CollectionReference _users = FirebaseFirestore.instance.collection(TableInDatabase.UserDetailTable);
 
-  /// -------------------- REGISTER --------------------
+  //REGISTER 
   Future<String?> register({
     required String username,
     required String email,
@@ -41,13 +41,12 @@ class AuthService {
   }
 
 
-  /// -------------------- LOGIN --------------------
+  //LOGIN
   Future<String?> login({
     required String email,
     required String password,
   }) async {
     try {
-
       await _auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
@@ -58,7 +57,7 @@ class AuthService {
     }
   }
 
-  /// -------------------- GET PROFILE --------------------
+  //GET PROFILE 
   Future<UserDetail?> getProfile() async {
     final user = _auth.currentUser;
     if (user == null) return null;
@@ -69,12 +68,12 @@ class AuthService {
     return UserDetail.fromJson(doc.data() as Map<String, dynamic>);
   }
 
-  /// -------------------- LOGOUT --------------------
+  //LOGOUT
   Future<void> logout() async {
     await _auth.signOut();
   }
 
-  /// -------------------- GET ALL --------------------
+  //GET ALL
   Future<List<UserDetail>> getAllUsers() async {
     final snapshot = await _users.get();
     return snapshot.docs
@@ -82,7 +81,7 @@ class AuthService {
         .toList();
   }
 
-  /// -------------------- UPDATE POINT + RANK --------------------
+  //UPDATE POINT + RANK
   Future<void> updateUserPointAndRank(
       String uid, int point, String rank) async {
     await _users.doc(uid).update({
@@ -91,17 +90,17 @@ class AuthService {
     });
   }
 
-  /// -------------------- UPDATE PASSWORD (Firebase Auth) --------------------
+  //UPDATE PASSWORD (Firebase Auth)
   Future<void> updatePassword(String newPassword) async {
     await _auth.currentUser!.updatePassword(newPassword);
   }
 
-  /// -------------------- DELETE USER (Firestore only) --------------------
+  //DELETE USER (Firestore only) 
   Future<void> deleteUser(String uid) async {
     await _users.doc(uid).delete();
   }
 
-  /// -------------------- FORGOT PASS --------------------
+  //FORGOT PASS 
   Future<String> sendResetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);

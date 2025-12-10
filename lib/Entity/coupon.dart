@@ -12,7 +12,6 @@ class Coupon {
   }
 
   Map<String, dynamic> toFirestore() {
-    // Chuyển danh sách codes thành map với key ngẫu nhiên hoặc theo logic định sẵn
     return {for (var code in codes) code: code};
   }
 }

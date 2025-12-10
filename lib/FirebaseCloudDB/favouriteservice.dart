@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffeeapp/Entity/productfavourite.dart';
 import 'package:coffeeapp/FirebaseCloudDB/tableindatabase.dart';
@@ -58,10 +60,10 @@ class FavouriteService {
       final doc = await docRef.get();
 
       if (doc.exists) {
-        // Nếu đã tồn tại thì xoá (bỏ thích)
+        // if exits thì delete (bỏ like)
         await docRef.delete();
       } else {
-        // Nếu chưa tồn tại thì thêm mới
+        // if no exits thì thêm mới
         await docRef.set({
           'email': email,
           'productName': productName,

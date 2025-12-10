@@ -17,15 +17,6 @@ class _ExecuteratingdisplayState extends State<Executeratingdisplay> {
       value: widget.rate,
       starCount: 5,
       starSize: 20,
-      // valueLabelColor: const Color(0xff9b9b9b),
-      // valueLabelTextStyle: const TextStyle(
-      //   color: Colors.white,
-      //   fontWeight: FontWeight.w400,
-      //   fontStyle: FontStyle.normal,
-      //   fontSize: 12.0,
-      // ),
-      // valueLabelRadius: 10,
-      maxValue: 5,
       starSpacing: 2,
       maxValueVisibility: true,
       valueLabelVisibility: false,
@@ -38,3 +29,7 @@ class _ExecuteratingdisplayState extends State<Executeratingdisplay> {
     );
   }
 }
+
+
+// use to display rating (type double) for object Product in product card (productcard_list.dart, productcard_recommended.dart) 
+// trans điểm đánh giá(double) thành widget icon( ngôi sao) to display in UI

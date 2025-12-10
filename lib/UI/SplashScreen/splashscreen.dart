@@ -1,3 +1,4 @@
+// File: lib/UI/SplashScreen/splashscreen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -13,7 +14,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  
   late final AudioPlayer _audioPlayer;
   late final AnimationController _animationController;
   late final AnimationController _fadeOutController;
@@ -21,7 +21,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-
     _audioPlayer = AudioPlayer();
     _animationController = AnimationController(vsync: this);
     _fadeOutController = AnimationController(
@@ -47,24 +46,30 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      // màu nền
-      backgroundColor: const Color(0xFFFFF4E0), 
+      backgroundColor: const Color(0xFFFFF4E0),
       
       body: FadeTransition(
         opacity: Tween(begin: 1.0, end: 0.0)
             .animate(CurvedAnimation(parent: _fadeOutController, curve: Curves.easeOut)),
-        child: Center(
+        child: SizedBox(
+          width: double.infinity,
+          height: double.infinity,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start, 
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Lottie Animation
+              const SizedBox(height: 150), 
+              
               Transform.scale(
-                scale: 1.3, // size
+                scale: 1.3, 
                 child: Lottie.asset(
                   'assets/background/coffee_pour.json',
                   controller: _animationController,
                   fit: BoxFit.contain,
+                  width: screenWidth,
                   onLoaded: (composition) {
                     _animationController
                       ..duration = composition.duration
@@ -72,34 +77,14 @@ class _SplashScreenState extends State<SplashScreen>
 
                     final totalMs = composition.duration.inMilliseconds;
 
-                    // Fade-out âm thanh
-                    _audioPlayer.onPositionChanged.listen((pos) {
-                      if (pos.inMilliseconds >= totalMs - 600) {
-                        final remaining =
-                            totalMs - pos.inMilliseconds.toDouble().clamp(0, 600);
-                        _audioPlayer.setVolume(remaining / 600);
-                      }
-                    });
-
-                    // Bắt đầu fade-out màn hình
-                    Future.delayed(Duration(milliseconds: totalMs - 600), () {
-                      _fadeOutController.forward();
-                    });
-
-                    // Chuyển màn hình
+                    // Logic chuyển màn hình
                     Future.delayed(Duration(milliseconds: totalMs - 200), () {
                       Navigator.pushReplacement(
                         context,
                         PageRouteBuilder(
                           pageBuilder: (_, __, ___) => const CoffeeLoginRegisterScreen(),
                           transitionsBuilder: (_, animation, __, child) =>
-                              FadeTransition(
-                                opacity: CurvedAnimation(
-                                  parent: animation,
-                                  curve: Curves.easeInOut,
-                                ),
-                                child: child,
-                              ),
+                              FadeTransition(opacity: animation, child: child),
                           transitionDuration: const Duration(milliseconds: 600),
                         ),
                       );
@@ -107,8 +92,6 @@ class _SplashScreenState extends State<SplashScreen>
                   },
                 ),
               ),
-
-              
             ],
           ),
         ),

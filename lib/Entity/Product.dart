@@ -1,12 +1,11 @@
-// ignore: duplicate_ignore
-// ignore: file_names, constant_identifier_names
-// ignore_for_file: file_names, constant_identifier_names
-
+//trans data enum(kiểu liệt kê) thành data Firestore string
 String enumToString(Object enumValue) => enumValue.toString().split('.').last;
-T stringToEnum<T>(List<T> values, String value) =>
-    values.firstWhere((e) => enumToString(e!) == value);
+
+//trans data from Fristore string thành object enum
+T stringToEnum<T>(List<T> values, String value) => values.firstWhere((e) => enumToString(e!) == value);
 
 class Product {
+  //final no change after create
   final String createDate;
   final String name;
   final String imageUrl;
@@ -16,6 +15,7 @@ class Product {
   late double price;
   final String type;
 
+//contrustor
   Product({
     required this.createDate,
     required this.name,
@@ -27,7 +27,9 @@ class Product {
     required this.type,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) => Product(
+//factory contrustor -> no need make new instance and it can return instance có sẵn
+//Map<.....> json -> deserialization(giải mã) : trabs data from Firebase thành Object class
+  factory Product.fromJson(Map<String, dynamic> json) => Product(  
     createDate: json['createDate'],
     name: json['name'],
     imageUrl: json['imageUrl'],
@@ -38,6 +40,7 @@ class Product {
     type: json['type'],
   );
 
+//Map<...> toJson() => serialization(mã hoá): đóng gói obeject class , gủi data lên Firestore
   Map<String, dynamic> toJson() => {
     'createDate': createDate,
     'name': name,
