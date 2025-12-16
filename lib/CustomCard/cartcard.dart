@@ -853,12 +853,14 @@ class _CartState extends State<Cart> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            DashedDivider(
+                            SizedBox(
                               width: detailsWidth,
-                              dashWidth: 6,
-                              dashSpace: 4,
-                              thickness: 1,
-                              color: Colors.grey.shade400,
+                              child: DashedDivider(
+                                dashWidth: 6,
+                                dashSpace: 4,
+                                thickness: 1,
+                                color: Colors.grey.shade400,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             // Total

@@ -87,10 +87,12 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
         } else {
           return Scaffold(
             backgroundColor: Colors.transparent,
+            // Trên Web Dashboard chúng ta đã có Header riêng, nhưng giữ lại AppBar để chứa thanh tìm kiếm
             appBar: AppBar(
               automaticallyImplyLeading: false,
               backgroundColor: Colors.transparent,
-
+              elevation: 0,
+              // Nếu muốn ẩn tiêu đề trên web vì đã có ở dashboard cha:
               title: const Text('Quản lý sản phẩm'),
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(50),
@@ -122,6 +124,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
               ),
             ),
             body: ScrollConfiguration(
+              // Cấu hình cho phép kéo chuột trên Web
               behavior: ScrollConfiguration.of(context).copyWith(
                 dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
               ),
@@ -138,6 +141,28 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                       color: Colors.red,
                       child: const Icon(Icons.delete, color: Colors.white),
                     ),
+                    // Thêm confirmDismiss để tránh xóa nhầm trên web
+                    confirmDismiss: (direction) async {
+                      return await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Xác nhận xóa"),
+                            content: Text("Bạn có chắc muốn xóa sản phẩm ${product.name}?"),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text("Hủy"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: const Text("Xóa", style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                     onDismissed: (_) => _deleteProduct(product),
                     child: ListTile(
                       leading: Image.asset(

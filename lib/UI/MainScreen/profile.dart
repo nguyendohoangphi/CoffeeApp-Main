@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'dart:ui';
 import 'package:coffeeapp/Entity/global_data.dart';
 import 'package:coffeeapp/Entity/userdetail.dart';
@@ -26,7 +28,6 @@ class _ProfileState extends State<Profile> {
     GlobalData.userDetail = (await FirebaseDBManager.authService.getProfile())!;
   }
 
-  // Map hình ảnh rank
   final Map<String, String> ranks = {
     'Hạng đồng': 'assets/images/rank/r1.png',
     'Hạng bạc': 'assets/images/rank/r0.png',

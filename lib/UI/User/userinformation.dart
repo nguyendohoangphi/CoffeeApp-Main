@@ -154,15 +154,6 @@ class _UserInformationState extends State<UserInformation> {
           icon: Icon(Icons.arrow_back_ios_new, color: textColor),
           onPressed: () {
             Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MenuNavigationBar(
-                  isDark: widget.isDark,
-                  selectedIndex: widget.index,
-                ),
-              ),
-            );
           },
         ),
         title: Text(

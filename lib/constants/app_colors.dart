@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class AppColors {
@@ -18,10 +20,16 @@ class AppColors {
   static const Color textMainDark = Colors.white; // Chữ trắng trên nền tối
   static const Color textSubDark = Colors.white70;
 
+  static const Color coffeeBlack = Color(0xFF000000); // Nền đen như repo
+  static const Color coffeeOrange = Color(0xFFFFA500); // Accent orange for text/button
+  static final Color coffeeWhiteOpacity = Colors.white.withOpacity(0.1);
+  static final Color overlayOpacity = Colors.black.withOpacity(0.7);
+  
   // 4. Gradient (Cho đẹp, hiện đại)
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [Color(0xFFFF9E44), Color(0xFFFF8A00)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+  
 }

@@ -11,11 +11,14 @@ class ProductcardCategorymain extends StatefulWidget {
   late bool isDark;
   final int index;
   final Product product;
+  final VoidCallback? onFavoriteChanged;
+  
   ProductcardCategorymain({
     super.key,
     required this.product,
     required this.isDark,
     required this.index,
+    this.onFavoriteChanged,
   });
 
   @override
@@ -24,7 +27,7 @@ class ProductcardCategorymain extends StatefulWidget {
 }
 
 class _ProductcardCategorymainState extends State<ProductcardCategorymain> {
-  var format = NumberFormat("#,###", "vi_VN");
+  var format = NumberFormat.decimalPattern("vi_VN");
 
   @override
   Widget build(BuildContext context) {
@@ -59,8 +62,9 @@ class _ProductcardCategorymainState extends State<ProductcardCategorymain> {
                         builder: (context) => ProductDetail(
                           isDark: widget.isDark,
                           index: 0,
-                          product: widget.product,
-                        ),
+                         product: widget.product,
+                          onFavoriteChanged: widget.onFavoriteChanged,
+                        ),                     
                       ),
                     );
                   },

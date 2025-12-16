@@ -1,452 +1,585 @@
+// File: lib/UI/Login_Register/coffeeloginregisterscreen.dart
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:coffeeapp/constants/app_colors.dart';
-import 'package:coffeeapp/UI/Login_Register/forgot_password_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
 import 'package:coffeeapp/Entity/global_data.dart';
-import 'package:coffeeapp/Transition/menunavigationbar.dart';
-import 'package:coffeeapp/Transition/menunavigationbar_admin.dart';
+import 'package:coffeeapp/Transition/auth_route_manager.dart';
+import 'package:coffeeapp/UI/Login_Register/forgot_password_screen.dart';
+import 'package:lottie/lottie.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
+
+class AppTheme {
+  static const Color primary = Color(0xFFB2640A); 
+  static const backgroundLight = Color(0xFFF8F7F5); 
+  static const textMain = Color(0xFF1C150D); 
+  static const textSub = Color(0xFF9C7649); 
+  static const borderLight = Color(0xFFE8DCCE); 
+  static const white = Colors.white;
+}
 
 class CoffeeLoginRegisterScreen extends StatefulWidget {
   const CoffeeLoginRegisterScreen({super.key});
 
   @override
-  State<CoffeeLoginRegisterScreen> createState() =>
-      _CoffeeLoginRegisterScreenState();
+  State<CoffeeLoginRegisterScreen> createState() => _CoffeeLoginRegisterScreenState();
 }
 
 class _CoffeeLoginRegisterScreenState extends State<CoffeeLoginRegisterScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-
-  // TEXT CONTROLLERS
-  final _loginEmail = TextEditingController();
-  final _loginPassword = TextEditingController();
-
-  final _registerUsername = TextEditingController();
-  final _registerEmail = TextEditingController();
-  final _registerPassword = TextEditingController();
-  final _registerConfirm = TextEditingController();
-
-  bool _showLoginPassword = false;
-  bool _showRegisterPassword = false;
-  bool _showRegisterConfirm = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    SchedulerBinding.instance.addPostFrameCallback((_) async {
-      await FirebaseAuth.instance.signOut();
-    });
+    FirebaseAuth.instance.signOut();
   }
 
-  void _showMessage(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+  void _setLoading(bool loading) {
+    if (mounted) {
+      setState(() => _isLoading = loading);
+    }
   }
 
+  void _showMessage(String msg, {bool isError = true}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: isError ? Colors.redAccent : AppTheme.primary,
+      behavior: SnackBarBehavior.floating,
+    ));
+  }
 
+  void _navigateToPage(int page) {
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOutCubic,
+    );
+  }
 
-        @override
-        Widget build(BuildContext context) {
-          // Lấy chiều cao bàn phím
-          final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundLight,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildHeroHeader(),
 
-          return Scaffold(
-            backgroundColor: Colors.white,
-            // QUAN TRỌNG: Giữ nguyên khung hình, không để bàn phím đẩy layout gốc
-            resizeToAvoidBottomInset: false, 
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        _currentPage == 0 ? 'Welcome Back' : 'Create Account',
+                        style: const TextStyle(
+                          color: AppTheme.textMain,
+                          fontSize: 20, // text-xl
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _currentPage == 0 
+                          ? 'Please sign in to continue your coffee journey.' 
+                          : 'Join us to start brewing happiness.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppTheme.textSub,
+                          fontSize: 14,
+                        ),
+                      ),
 
-            body: SizedBox(
-              height: MediaQuery.of(context).size.height,
-              width: double.infinity,
-              child: Stack(
-                children: [
-                  // ================= LỚP 1: BACKGROUND CỐ ĐỊNH =================
-                  Positioned.fill(
-                    child: Image.asset(
-                      "assets/images/background_coffee.jpg", 
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  
-                  Positioned.fill(
-                    child: Container(color: Colors.black.withOpacity(0.3)), // Màu tối nhẹ
-                  ),
+                      const SizedBox(height: 32),
 
-                  // ================= LỚP 2: NỘI DUNG FORM  =================
-                  Positioned.fill(
-                    child: SingleChildScrollView(
-                      // Cho phép nảy nhẹ kiểu iOS
-                      physics: const BouncingScrollPhysics(), 
-                      child: Padding(
-                        // Padding bottom bằng chiều cao bàn phím để đẩy nội dung lên vừa đủ
-                        padding: EdgeInsets.only(bottom: bottomPadding), 
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      //  FORM PAGE VIEW 
+                      SizedBox(
+                        height: _currentPage == 0 ? 320 : 420, 
+                        child: PageView(
+                          controller: _pageController,
+                          physics: const NeverScrollableScrollPhysics(), 
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentPage = index;
+                            });
+                          },
                           children: [
-                            SizedBox(height: MediaQuery.of(context).size.height * 0.18),
-
-                            // LOGO
-                            // Image.asset(
-                            //   "assets/images/logo.png",
-                            //    height: 100, // Kích thước cố định sang trọng
-                            // ),
-                            
-                            const SizedBox(height: 10),
-                            
-                            
-                            // const Text(
-                            //   "Coffee Phinom",
-                            //   style: TextStyle(
-                            //     fontSize: 28, 
-                            //     fontWeight: FontWeight.bold, 
-                            //     color: Colors.white, 
-                            //     fontFamily: 'Montserrat' 
-                            //   ),
-                            // ),
-
-                            const SizedBox(height: 30),
-
-                            // KHỐI FORM 
-                            Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 20),
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                              decoration: BoxDecoration(
-                                color: Colors.white, 
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 10,
-                                    offset: Offset(0, 5),
-                                  )
-                                ]
-                              ),
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 300),
-                                child: _currentPage == 0
-                                    ? _buildLoginForm()
-                                    : _buildRegisterForm(),
-                              ),
+                            _LoginForm(
+                              setLoading: _setLoading,
+                              showMessage: _showMessage,
                             ),
-
-                            const SizedBox(height: 20),
-
-                            // TEXT CHUYỂN TRANG
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  _currentPage == 0
-                                      ? "Bạn chưa có tài khoản? "
-                                      : "Đã có tài khoản? ",
-                                  style: const TextStyle(fontSize: 14, color: Colors.white),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _currentPage = _currentPage == 0 ? 1 : 0;
-                                    });
-                                  },
-                                  child: Text(
-                                    _currentPage == 0 ? "Đăng ký ngay" : "Đăng nhập",
-                                    style: const TextStyle(
-                                      color: Color.fromARGB(255, 255, 194, 103), // Màu cam Coffee
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            _RegisterForm(
+                              setLoading: _setLoading,
+                              showMessage: _showMessage,
+                              onRegisterSuccess: () => _navigateToPage(0),
                             ),
-                            
-                            // Khoảng cách dưới cùng để khi scroll không bị sát quá
-                            const SizedBox(height: 50),
                           ],
                         ),
                       ),
-                    ),
+
+                      // DIVIDER 
+                      if (_currentPage == 0) ...[
+                        const SizedBox(height: 10),
+                        _buildDivider(),
+                        const SizedBox(height: 24),
+                        _buildSocialButtons(),
+                        const SizedBox(height: 32),
+                      ],
+
+                      //BOTTOM NAVIGATION 
+                      _buildBottomNav(),
+                      
+                      const SizedBox(height: 20),
+                    ],
                   ),
+                ),
+              ],
+            ),
+          ),
+
+         // Loading Indicator (Overlay)
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: Lottie.asset('assets/background/loading.json', width: 150, height: 150),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // --- UI COMPONENTS ---
+
+  Widget _buildHeroHeader() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          height: 320, 
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(48)), // Rounded-b-3rem
+            image: DecorationImage(
+              image: AssetImage('assets/background/login_hero.jpg'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(48)),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppTheme.backgroundLight.withOpacity(0.0),
+                  AppTheme.backgroundLight.withOpacity(0.4),
+                  AppTheme.backgroundLight,
                 ],
               ),
             ),
-          );
-        }
-
-
-
-  // =====================================================================
-  // LOGIN FORM 
-  // =====================================================================
-  Widget _buildLoginForm() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 26),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-
-          _shopeeTextField(
-            hint: "Email address",
-            icon: Icons.person_outline,
-            controller: _loginEmail,
           ),
-          const SizedBox(height: 25),
-
-          _shopeePasswordField(
-            hint: "Password",
-            controller: _loginPassword,
-            isVisible: _showLoginPassword,
-            onToggle: () =>
-                setState(() => _showLoginPassword = !_showLoginPassword),
-          ),
-
-          const SizedBox(height: 10),
-
-          Align(
-            alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
-              child: Text("Forgotten password?",
-                  style: TextStyle(color: Colors.blue.shade600, fontSize: 14)),
-            ),
-          ),
-
-          const SizedBox(height: 35),
-
-          // LOGIN BUTTON
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _handleLogin,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade300,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6)),
-              ),
-              child: const Text(
-                "Login",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // =====================================================================
-  // REGISTER FORM 
-  // =====================================================================
-  Widget _buildRegisterForm() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 26),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-
-          _shopeeTextField(
-            hint: "Name",
-            icon: Icons.person_outline,
-            controller: _registerUsername,
-          ),
-          const SizedBox(height: 20),
-
-          _shopeeTextField(
-            hint: "Email",
-            icon: Icons.email_outlined,
-            controller: _registerEmail,
-          ),
-          const SizedBox(height: 20),
-
-          _shopeePasswordField(
-            hint: "Password",
-            controller: _registerPassword,
-            isVisible: _showRegisterPassword,
-            onToggle: () => setState(
-                () => _showRegisterPassword = !_showRegisterPassword),
-          ),
-          const SizedBox(height: 20),
-
-          _shopeePasswordField(
-            hint: "Confirm password",
-            controller: _registerConfirm,
-            isVisible: _showRegisterConfirm,
-            onToggle: () => setState(
-                () => _showRegisterConfirm = !_showRegisterConfirm),
-          ),
-
-          const SizedBox(height: 30),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _handleRegister,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade300,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6)),
-              ),
-              child: const Text(
-                "Create new account",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // =====================================================================
-  // ------------------------ Coffee STYLE FIELDS ------------------------
-  // =====================================================================
-          Widget _shopeeTextField({
-              required String hint,
-              required IconData icon,
-              required TextEditingController controller,
-          }) {
-              return Column(
-          children: [
-                 Row(
-                    children: [
-                          Icon(icon, color: Colors.grey.shade600, size: 22),
-                          const SizedBox(width: 10),
-                          Expanded(
-                              child: TextField(
-                              controller: controller,
-                                    style: const TextStyle(  fontSize: 15,  color: Colors.black  ),
-                                  decoration: InputDecoration(
-                                  hintText: hint,
-                                  hintStyle:
-                                  TextStyle(color:Colors.grey.shade500, fontSize: 15),
-                                  border: InputBorder.none,
-                                  ),
-                              ),
-                          ),
-                     ],
-                 ),
-          Container(height: 1, color: Colors.grey.shade300),
-          ],
-              ) ;
-            }
-
-
-  Widget _shopeePasswordField({
-    required String hint,
-    required TextEditingController controller,
-    required bool isVisible,
-    required VoidCallback onToggle,
-  }) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Icon(Icons.lock_outline, color: Colors.grey.shade600, size: 22),
-            const SizedBox(width: 10),
-            Expanded(
-              child: TextField(
-                controller: controller,
-                obscureText: !isVisible,
-                style: const TextStyle(fontSize: 15, color: Colors.black),
-                decoration: InputDecoration(
-                  hintText: hint,
-                  hintStyle:
-                      TextStyle(color: Colors.grey.shade500, fontSize: 15),
-                  border: InputBorder.none,
+        ),
+        // Logo Overlay
+        Positioned(
+          bottom: 0,
+          child: Column(
+            children: [
+              Transform.rotate(
+                angle: 3 * math.pi / 180, 
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
+                  ),
+                  child: const Icon(Icons.coffee, color: Colors.white, size: 36),
                 ),
               ),
-            ),
-            GestureDetector(
-              onTap: onToggle,
-              child: Icon(
-                isVisible ? Icons.visibility : Icons.visibility_off,
-                color: Colors.grey.shade600,
+              const SizedBox(height: 8),
+              const Text(
+                'PhINoM',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.textMain,
+                  letterSpacing: -0.5,
+                ),
               ),
-            )
-          ],
+              const Text(
+                'BREWING HAPPINESS',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primary,
+                  letterSpacing: 2.0,
+                ),
+              ),
+            ],
+          ),
         ),
-        Container(height: 1, color: Colors.grey.shade300),
       ],
     );
   }
 
-  // =====================================================================
-  // LOGIC LOGIN / REGISTER 
-  // =====================================================================
+  Widget _buildDivider() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        const Divider(color: AppTheme.borderLight),
+        Container(
+          color: AppTheme.backgroundLight,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: const Text(
+            'Or continue with',
+            style: TextStyle(color: AppTheme.textSub, fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _socialButton('assets/icons/google.svg'), 
+        const SizedBox(width: 20),
+        _socialButton('assets/icons/apple.svg'),
+      ],
+    );
+  }
+
+  Widget _socialButton(String assetPath) {
+    return Container(
+      width: 56,
+      height: 56,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppTheme.white,
+        border: Border.all(color: AppTheme.borderLight),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
+        ],
+      ),
+      child: Image.asset(assetPath), 
+    );
+  }
+
+  Widget _buildBottomNav() {
+    bool isLogin = _currentPage == 0;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          isLogin ? 'New to PhINoM? ' : 'Already have an account? ',
+          style: const TextStyle(color: AppTheme.textMain, fontSize: 14),
+        ),
+        GestureDetector(
+          onTap: () {
+             if (isLogin) {
+               _navigateToPage(1); // Go to Register
+             } else {
+               _navigateToPage(0); // Go to Login
+             }
+          },
+          child: Text(
+            isLogin ? 'Create Account' : 'Log In',
+            style: const TextStyle(
+              color: AppTheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              decoration: TextDecoration.underline,
+              decorationColor: AppTheme.primary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoginForm extends StatefulWidget {
+  final void Function(bool) setLoading;
+  final void Function(String, {bool isError}) showMessage;
+
+  const _LoginForm({required this.setLoading, required this.showMessage});
+
+  @override
+  State<_LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends State<_LoginForm> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _showPassword = false;
 
   Future<void> _handleLogin() async {
-    if (_loginEmail.text.isEmpty || _loginPassword.text.isEmpty) {
-      _showMessage("Vui lòng nhập email và mật khẩu");
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      widget.showMessage("Vui lòng nhập email và mật khẩu");
       return;
     }
-
-    await FirebaseAuth.instance.signOut();
-    await Future.delayed(const Duration(milliseconds: 300));
+    widget.setLoading(true);
 
     final result = await FirebaseDBManager.authService.login(
-      email: _loginEmail.text.trim(),
-      password: _loginPassword.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
     );
+    
+    if (!mounted) return;
 
     if (result != "OK") {
-      _showMessage(result ?? "Đăng nhập thất bại");
+      widget.setLoading(false);
+      widget.showMessage(result ?? "Đăng nhập thất bại");
       return;
     }
 
     final profile = await FirebaseDBManager.authService.getProfile();
+    if (!mounted) return;
+
+    widget.setLoading(false);
     if (profile == null) {
-      _showMessage("Không thể lấy thông tin người dùng!");
+      widget.showMessage("Không thể lấy thông tin người dùng!");
       return;
     }
 
     GlobalData.userDetail = profile;
-
-    if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (_) => profile.role == "admin"
-            ? MenuNavigationbarAdmin()
-            : MenuNavigationBar(isDark: false, selectedIndex: 0),
-      ),
-      (route) => false,
-    );
+    AuthRouteManager.goToHome(context, profile.role);
   }
 
-  Future<void> _handleRegister() async {
-    if (_registerUsername.text.isEmpty ||
-        _registerEmail.text.isEmpty ||
-        _registerPassword.text.isEmpty ||
-        _registerConfirm.text.isEmpty) {
-      _showMessage("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    if (_registerPassword.text != _registerConfirm.text) {
-      _showMessage("Mật khẩu không khớp");
-      return;
-    }
-
-    final result = await FirebaseDBManager.authService.register(
-      username: _registerUsername.text.trim(),
-      email: _registerEmail.text.trim(),
-      password: _registerPassword.text.trim(),
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _ModernTextField(
+          hint: "Email Address", 
+          icon: Symbols.mail, 
+          controller: _emailController
+        ),
+        const SizedBox(height: 16),
+        _ModernPasswordField(
+          hint: "Password",
+          controller: _passwordController,
+          isVisible: _showPassword,
+          onToggle: () => setState(() => _showPassword = !_showPassword),
+        ),
+        
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+            child: const Text(
+              "Forgot Password?", 
+              style: TextStyle(color: AppTheme.primary, fontSize: 14, fontWeight: FontWeight.w600)
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        _ActionButton(text: "LOG IN", onPressed: _handleLogin),
+      ],
     );
+  }
+}
+
+class _RegisterForm extends StatefulWidget {
+  final void Function(bool) setLoading;
+  final void Function(String, {bool isError}) showMessage;
+  final VoidCallback onRegisterSuccess;
+
+  const _RegisterForm({
+    required this.setLoading,
+    required this.showMessage,
+    required this.onRegisterSuccess,
+  });
+
+  @override
+  State<_RegisterForm> createState() => _RegisterFormState();
+}
+
+class _RegisterFormState extends State<_RegisterForm> {
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
+  bool _showPassword = false;
+  bool _showConfirm = false;
+
+  Future<void> _handleRegister() async {
+    if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmController.text.isEmpty) {
+      widget.showMessage("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+    if (_passwordController.text != _confirmController.text) {
+      widget.showMessage("Mật khẩu không khớp");
+      return;
+    }
+
+    widget.setLoading(true);
+    final result = await FirebaseDBManager.authService.register(
+      username: _usernameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+    if (!mounted) return;
+    widget.setLoading(false);
 
     if (result == "OK") {
-      _showMessage("Đăng ký thành công!");
-      _pageController.animateToPage(0,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut);
+      widget.showMessage("Đăng ký thành công! Vui lòng đăng nhập.", isError: false);
+      widget.onRegisterSuccess();
     } else {
-      _showMessage(result!);
+      widget.showMessage(result ?? "Đăng ký thất bại.");
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _ModernTextField(hint: "Full Name", icon: Symbols.person, controller: _usernameController),
+        const SizedBox(height: 16),
+        _ModernTextField(hint: "Email Address", icon: Symbols.mail, controller: _emailController),
+        const SizedBox(height: 16),
+        _ModernPasswordField(
+          hint: "Password",
+          controller: _passwordController,
+          isVisible: _showPassword,
+          onToggle: () => setState(() => _showPassword = !_showPassword),
+        ),
+        const SizedBox(height: 16),
+        _ModernPasswordField(
+          hint: "Confirm Password",
+          controller: _confirmController,
+          isVisible: _showConfirm,
+          onToggle: () => setState(() => _showConfirm = !_showConfirm),
+        ),
+        const SizedBox(height: 24),
+        _ActionButton(text: "CREATE ACCOUNT", onPressed: _handleRegister),
+      ],
+    );
+  }
+}
+
+//REUSABLE WIDGETS 
+
+class _ModernTextField extends StatelessWidget {
+  final String hint;
+  final IconData icon;
+  final TextEditingController controller;
+
+  const _ModernTextField({required this.hint, required this.icon, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.white,
+        borderRadius: BorderRadius.circular(999), // Pill shape
+        border: Border.all(color: AppTheme.borderLight),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 2, offset: const Offset(0, 1))
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        style: const TextStyle(color: AppTheme.textMain),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: AppTheme.textSub.withOpacity(0.6)),
+          prefixIcon: Icon(icon, color: AppTheme.textSub),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModernPasswordField extends StatelessWidget {
+  final String hint;
+  final TextEditingController controller;
+  final bool isVisible;
+  final VoidCallback onToggle;
+
+  const _ModernPasswordField({
+    required this.hint,
+    required this.controller,
+    required this.isVisible,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.white,
+        borderRadius: BorderRadius.circular(999), // Pill shape
+        border: Border.all(color: AppTheme.borderLight),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 2, offset: const Offset(0, 1))
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: !isVisible,
+        style: const TextStyle(color: AppTheme.textMain),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: AppTheme.textSub.withOpacity(0.6)),
+          prefixIcon: const Icon(Symbols.lock, color: AppTheme.textSub),
+          suffixIcon: IconButton(
+            icon: Icon(isVisible ? Symbols.visibility : Symbols.visibility_off, color: AppTheme.textSub),
+            onPressed: onToggle,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+
+  const _ActionButton({required this.text, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.primary,
+          elevation: 8,
+          shadowColor: AppTheme.primary.withOpacity(0.3),
+          shape: const StadiumBorder(), // Pill shape
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
   }
 }

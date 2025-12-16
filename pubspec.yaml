@@ -37,6 +37,8 @@ dependencies:
   badges: ^3.1.2
   flutter_dotenv: ^6.0.0
   google_generative_ai: ^0.4.7
+  material_symbols_icons: ^4.2892.0
+  flutter_svg: ^2.0.9
     
 dev_dependencies:
   flutter_test:
@@ -48,6 +50,8 @@ flutter:
   assets:
     - assets/images/background_coffee.jpg
     - assets/images/logo.png
+    - assets/admin_avatar.png
+    - assets/logo.png
     - assets/images/banner/firstbanner.jpg
     - assets/images/banner/secondbanner.jpg
     - assets/images/banner/thirdbanner.jpg
@@ -57,17 +61,17 @@ flutter:
     - assets/images/drink/product3.png
     - assets/images/drink/product4.png
     - assets/images/drink/product5.png
-    - assets/images/drink/category1.jpg
+    - assets/images/drink/category1.png
     - assets/images/drink/category2.jpg
-    - assets/images/drink/category3.jpg
-    - assets/images/drink/category4.jpg
-    - assets/images/drink/category5.jpg
+    - assets/images/drink/category3.png
+    - assets/images/drink/category4.png
+    - assets/images/drink/category5.png
     - assets/images/drink/category6.jpg
     - assets/images/drink/category7.jpg
     - assets/images/drink/PlaceholderProductImage.jpg
     - assets/images/drink/user.png
     - assets/video/PhiNomcoffeeIntro.mp4
-    - assets/background/hinhnenPhiNomcoffee.jpg
+    - assets/background/login_hero.jpg
     - assets/images/rank/r0.png
     - assets/images/rank/r1.png
     - assets/images/rank/r2.png
@@ -83,7 +87,8 @@ flutter:
     - assets/background/loading.json
     - assets/background/coffee_pour.json
     - assets/audio/coffee_pour_sound.mp3
-    
+    - assets/icons/apple.svg
+    - assets/icons/google.svg
 fonts:
   - family: Poppins
     fonts:

@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable, deprecated_member_use
+
 import 'dart:ui';
 // import 'package:animate_gradient/animate_gradient.dart';
 import 'package:coffeeapp/Entity/ads.dart';
@@ -67,6 +69,23 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   // ------------------------------------------------------------
   // LOAD DATA FIRESTORE
   // ------------------------------------------------------------
+  Future<void> _refreshFavourites() async {
+    logger.i("Refreshing favourites...");
+    List<ProductFavourite> favList = await FirebaseDBManager.favouriteService.getFavouritesByEmail(GlobalData.userDetail.email);
+    logger.i("Found ${favList.length} favourites in database.");
+
+    favouriteProduct.clear();
+    for (var fav in favList) {
+      favouriteProduct.add(await FirebaseDBManager.productService
+          .getProductByName(fav.productName));
+    }
+    logger.i("Updated local favouriteProduct list. Count: ${favouriteProduct.length}");
+    if (mounted) {
+      setState(() {});
+      logger.i("setState called on Home screen.");
+    }
+  }
+
   Future<void> LoadData() async {
     GlobalData.userDetail = (await FirebaseDBManager.authService.getProfile())!;
 
@@ -80,15 +99,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       productsCategory = await FirebaseDBManager.productService
           .getProductsByType(categories[indexCategory].name);
     }
-
-    List<ProductFavourite> favList = await FirebaseDBManager.favouriteService
-        .getFavouritesByEmail(GlobalData.userDetail.email);
-
-    favouriteProduct.clear();
-    for (var fav in favList) {
-      favouriteProduct.add(await FirebaseDBManager.productService
-          .getProductByName(fav.productName));
-    }
+    // Call the refresh function to load favourites
+    await _refreshFavourites();
   }
 
   // ------------------------------------------------------------
@@ -97,7 +109,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent, // Trong suốt để hiện nền Gradient từ MenuNavigationBar
+      backgroundColor: Colors.transparent, 
       body: FutureBuilder(
         future: _loadDataFuture,
         builder: (context, snapshot) {
@@ -145,19 +157,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  // ------------------------------------------------------------
-  // MAIN UI
+  // MAIN UI - NEW MODERN DESIGN
   // ------------------------------------------------------------
   Widget _buildMainUI(BuildContext context) {
     // Xác định màu chữ dựa trên theme
     final Color textColor = widget.isDark ? AppColors.textMainDark : AppColors.textMainLight;
     final Color subTextColor = widget.isDark ? AppColors.textSubDark : AppColors.textSubLight;
-    final Color cardColor = widget.isDark ? AppColors.cardDark : Colors.white;
+    final Color cardColor = widget.isDark ? const Color(0xFF252A32) : Colors.white;
+    final Color subtleBorderColor = widget.isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. HEADER: CHÀO HỎI & AVATAR
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
           child: Row(
@@ -182,7 +193,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // Hiển thị Rank nhỏ gọn dưới tên
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
@@ -217,86 +227,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
 
 
-      // // 2. SEARCH BAR (Thanh tìm kiếm)
-        // Padding(
-        //   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        //   child: Container(
-        //     height: 50,
-        //     decoration: BoxDecoration(
-        //       color: cardColor,
-        //       borderRadius: BorderRadius.circular(25),
-        //       boxShadow: [
-        //         BoxShadow(
-        //           color: Colors.black.withOpacity(0.05),
-        //           blurRadius: 10,
-        //           offset: const Offset(0, 4),
-        //         )
-        //       ],
-        //     ),
-        //     child: SearchAnchor(
-        //       builder: (BuildContext context, SearchController controller) {
-        //         return SearchBar(
-        //           controller: controller,
-        //           hintText: "Tìm kiếm đồ uống...",
-        //           hintStyle: MaterialStateProperty.all(TextStyle(color: const Color.fromARGB(255, 255, 255, 255))),
-        //           textStyle: MaterialStateProperty.all(TextStyle(color: widget.isDark ? Colors.white : Colors.black87)),
-        //           surfaceTintColor: MaterialStateProperty.all(Colors.transparent),
-        //           backgroundColor: MaterialStateProperty.all(Colors.transparent),
-        //           overlayColor: MaterialStateProperty.all(Colors.transparent),
-        //           shadowColor: MaterialStateProperty.all(Colors.transparent),
-        //           elevation: MaterialStateProperty.all(0),
-        //           onTap: controller.openView,
-        //           onChanged: (_) => controller.openView(),
-                  
-        //           // LOGIC TÌM KIẾM GIỮ NGUYÊN
-        //           onSubmitted: (value) async {
-        //             if (value.trim().isEmpty || productSearchList.isEmpty) return;
-        //             Navigator.push(
-        //               context,
-        //               MaterialPageRoute(
-        //                 builder: (_) => ProductList(
-        //                   nameProduct: value.trim(),
-        //                   productType: "",
-        //                   isDark: widget.isDark,
-        //                   index: 0,
-        //                 ),
-        //               ),
-        //             );
-        //           },
-        //           leading: const Icon(Icons.search, color: AppColors.primary),
-        //         );
-        //       },
-        //       suggestionsBuilder: (context, controller) async {
-        //         String q = controller.text.trim().toLowerCase();
-        //         productSearchList = await FirebaseDBManager.productService.searchProductsByName(q);
+    
 
-        //         if (productSearchList.isEmpty) {
-        //           return [
-        //             ListTile(
-        //               title: Text("Không tìm thấy", style: TextStyle(color: textColor)),
-        //             )
-        //           ];
-        //         }
-
-        //         return productSearchList.map((p) {
-        //           return ListTile(
-        //             title: Text(p.name, style: TextStyle(color: textColor)),
-        //             onTap: () => controller.closeView(p.name),
-        //           );
-        //         }).toList();
-        //       },
-        //     ),
-        //   ),
-        // ),
-
-        // const SizedBox(height: 10),
-
-
-
-
-
-
-        // 2. SEARCH BAR (Thanh tìm kiếm) 
+        // 2. SEARCH BAR 
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Container(
@@ -338,11 +271,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 );
               },
               
-              // GỢI Ý KẾT QUẢ (SUGGESTIONS)
               suggestionsBuilder: (context, controller) async {
               final keyword = controller.text.trim();
 
-                // Lấy danh sách sản phẩm
                 productSearchList =
                     await FirebaseDBManager.productService.searchProductsByName(keyword);
 
@@ -356,7 +287,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   ];
                 }
 
-                //Danh sách sản phẩm
                 return productSearchList.map((product) {
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(
@@ -364,14 +294,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       vertical: 6,
                     ),
 
-                  // ==== IMAGE FIXED SIZE ====
                      leading: Container(
                       width: 45,
                       height: 45,
                       clipBehavior: Clip.hardEdge,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        color: Colors.grey.shade200, // nền an toàn nếu ảnh lỗi
+                        color: Colors.grey.shade200, 
                       ),
                       child: _buildProductImage(product.imageUrl),
                     ),
@@ -437,15 +366,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          // Ảnh nền banner
-                          Image.network(
-                            ad.imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(color: Colors.grey, child: const Icon(Icons.error));
-                            },
-                          ),
-                          // Lớp phủ đen mờ
+                          _buildSmartImage(ad.imageUrl),
                           Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -525,7 +446,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         ),
         const SizedBox(height: 15),
         
-        // List danh mục ngang (Pills style)
+        // List  (Pills style)
         SizedBox(
           height: 45,
           child: ListView.builder(
@@ -570,7 +491,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
         const SizedBox(height: 20),
 
-        // 5. LIST SẢN PHẨM THEO DANH MỤC
+        // 5. LIST product THEO category
         Padding(
           padding: const EdgeInsets.only(left: 20.0),
           child: SizedBox(
@@ -586,6 +507,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     product: product,
                     isDark: widget.isDark,
                     index: index,
+                    onFavoriteChanged: _refreshFavourites,
                   ),
                 );
               },
@@ -595,35 +517,36 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
         const SizedBox(height: 25),
 
-        // // 6. TOP RATED PRODUCTS (Đồ uống bán chạy)
-        // Padding(
-        //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        //   child: _buildSectionHeader("Đồ uống bán chạy", 'assets/video/CoffeeRecommended.json', textColor),
-        // ),
-        // const SizedBox(height: 10),
-        // Padding(
-        //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        //   child: ListView.builder(
-        //     physics: const NeverScrollableScrollPhysics(),
-        //     shrinkWrap: true, 
-        //     itemCount: productTop10HighRatingList.length,
-        //     itemBuilder: (context, index) {
-        //       final p = productTop10HighRatingList[index];
-        //       return Padding(
-        //         padding: const EdgeInsets.only(bottom: 10.0),
-        //         child: ProductcardRecommended(
-        //           product: p,
-        //           isDark: widget.isDark,
-        //           index: index,
-        //         ),
-        //       );
-        //     },
-        //   ),
-        // ),
+        // 6. TOP RATED PRODUCTS 
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: _buildSectionHeader("Đồ uống bán chạy", 'assets/video/CoffeeRecommended.json', textColor),
+        ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: ListView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true, 
+            itemCount: productTop10HighRatingList.length,
+            itemBuilder: (context, index) {
+              final p = productTop10HighRatingList[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: ProductcardRecommended(
+                  product: p,
+                  isDark: widget.isDark,
+                  index: index,
+                  onFavoriteChanged: _refreshFavourites,
+                ),
+              );
+            },
+          ),
+        ),
 
-        // const SizedBox(height: 20),
+        const SizedBox(height: 20),
 
-        // 7. FAVOURITE PRODUCTS (Yêu thích)
+        // 7. FAVOURITE PRODUCTS 
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: _buildSectionHeader("Đồ uống yêu thích", 'assets/video/CoffeeFavourite.json', textColor),
@@ -643,18 +566,19 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   product: p,
                   isDark: widget.isDark,
                   index: index,
+                  onFavoriteChanged: _refreshFavourites,
                 ),
               );
             },
           ),
         ),
         
-        const SizedBox(height: 80), // Khoảng trống dưới cùng để không bị BottomBar che
+        const SizedBox(height: 80), 
       ],
     );
   }
 
-  // Widget hỗ trợ vẽ tiêu đề Section
+  // Widget sp title Section
   Widget _buildSectionHeader(String title, String lottieAsset, Color textColor) {
     return Row(
       children: [
@@ -676,9 +600,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  // --- CÁC HÀM HELPER BỔ TRỢ ---
+  // --- HELPER ---
 
-  // Hàm điều hướng gọn gàng
   void _navigateToProductList(BuildContext context, String keyword) {
     Navigator.push(
       context,
@@ -693,7 +616,29 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  // Hàm xử lý ảnh thông minh (Sửa lỗi không hiện ảnh)
+  
+  Widget _buildSmartImage(String url, {BoxFit fit = BoxFit.cover}) {
+    if (url.startsWith('http')) {
+      return Image.network(
+        url,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          logger.e("Lỗi tải ảnh MẠNG: $url", error: error, stackTrace: stackTrace);
+          return Container(color: Colors.grey, child: const Icon(Icons.error_outline));
+        },
+      );
+    } else {
+      return Image.asset(
+        url,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          logger.e("Lỗi tải ảnh ASSET: $url", error: error, stackTrace: stackTrace);
+          return Container(color: Colors.grey, child: const Icon(Icons.error_outline));
+        },
+      );
+    }
+  }
+
   Widget _buildProductImage(String url) {
     if (url.startsWith('http')) {
       return Image.network(

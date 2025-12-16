@@ -107,10 +107,6 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MenuNavigationbarAdmin()),
-            );
           },
           icon: Icon(Icons.arrow_back),
         ),

@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _startSplashFlow() async {
     await _audioPlayer.setVolume(1.0);
-    await _audioPlayer.play(AssetSource('audio/coffee_pour_sound.mp3'));
+  //  await _audioPlayer.play(AssetSource('audio/coffee_pour_sound.mp3'));
   }
 
   @override
@@ -49,7 +49,8 @@ class _SplashScreenState extends State<SplashScreen>
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF4E0),
+
+      backgroundColor: Colors.white, 
       
       body: FadeTransition(
         opacity: Tween(begin: 1.0, end: 0.0)
@@ -58,18 +59,18 @@ class _SplashScreenState extends State<SplashScreen>
           width: double.infinity,
           height: double.infinity,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start, 
+
+            mainAxisAlignment: MainAxisAlignment.center, 
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 150), 
               
               Transform.scale(
-                scale: 1.3, 
+                scale: 0.5, 
                 child: Lottie.asset(
                   'assets/background/coffee_pour.json',
                   controller: _animationController,
                   fit: BoxFit.contain,
-                  width: screenWidth,
+                  width: screenWidth, 
                   onLoaded: (composition) {
                     _animationController
                       ..duration = composition.duration
