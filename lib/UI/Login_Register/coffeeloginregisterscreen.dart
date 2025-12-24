@@ -323,30 +323,27 @@ class _LoginFormState extends State<_LoginForm> {
   final _passwordController = TextEditingController();
   bool _showPassword = false;
 
-  Future<void> _handleLogin() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      widget.showMessage("Vui lòng nhập email và mật khẩu");
-      return;
-    }
-    widget.setLoading(true);
+Future<void> _handleLogin() async {
+  if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+    widget.showMessage("Vui lòng nhập email và mật khẩu");
+    return;
+  }
 
+  widget.setLoading(true);
+
+  try {
     final result = await FirebaseDBManager.authService.login(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
     );
-    
-    if (!mounted) return;
 
     if (result != "OK") {
-      widget.setLoading(false);
       widget.showMessage(result ?? "Đăng nhập thất bại");
       return;
     }
 
     final profile = await FirebaseDBManager.authService.getProfile();
-    if (!mounted) return;
 
-    widget.setLoading(false);
     if (profile == null) {
       widget.showMessage("Không thể lấy thông tin người dùng!");
       return;
@@ -354,7 +351,16 @@ class _LoginFormState extends State<_LoginForm> {
 
     GlobalData.userDetail = profile;
     AuthRouteManager.goToHome(context, profile.role);
+
+  } catch (e) {
+    widget.showMessage("Có lỗi xảy ra, vui lòng thử lại");
+  } finally {
+    if (mounted) {
+      widget.setLoading(false); 
+    }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
