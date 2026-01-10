@@ -22,6 +22,7 @@ class GlobalData {
     rank: 'Hạng đồng',
     point: 0,
     role: 'user',
+    phone: '', 
   );
 
 

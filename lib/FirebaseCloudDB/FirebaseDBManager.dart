@@ -8,6 +8,7 @@ import 'package:coffeeapp/FirebaseCloudDB/couponservice.dart';
 import 'package:coffeeapp/FirebaseCloudDB/favouriteservice.dart';
 import 'package:coffeeapp/FirebaseCloudDB/orderservice.dart';
 import 'package:coffeeapp/FirebaseCloudDB/productservice%20.dart';
+import 'package:coffeeapp/FirebaseCloudDB/revenueservice.dart';
 import 'package:coffeeapp/FirebaseCloudDB/tablestatusservice.dart';
 
 class FirebaseDBManager {
@@ -21,6 +22,7 @@ class FirebaseDBManager {
   static final FavouriteService favouriteService = FavouriteService();
   static final AuthService authService = AuthService();
   static final CouponService couponService = CouponService();
+  static final RevenueService revenueService = RevenueService();
 
   Future<bool> collectionExists(String collectionPath) async {
     final collectionRef = FirebaseFirestore.instance.collection(collectionPath);

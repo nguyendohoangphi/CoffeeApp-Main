@@ -1,5 +1,6 @@
 import 'package:coffeeapp/Entity/Product.dart';
 import 'package:coffeeapp/Entity/cartitem.dart';
+import 'package:coffeeapp/Entity/payment_status.dart';  
 
 class OrderItem {
   final String id;
@@ -14,6 +15,10 @@ class OrderItem {
   final String total;
   final String coupon;
 
+  final PaymentStatus paymentStatus;  
+  final String? transactionId;  
+  final bool isMockPayment;  
+
   OrderItem({
     required this.table,
     required this.phone,
@@ -26,6 +31,9 @@ class OrderItem {
     required this.cartItems,
     required this.total,
     required this.coupon,
+    this.paymentStatus = PaymentStatus.pending,  
+    this.transactionId,  
+    this.isMockPayment = false,  
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) => OrderItem(

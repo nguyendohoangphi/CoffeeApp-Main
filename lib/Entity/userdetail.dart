@@ -7,6 +7,9 @@ class UserDetail {
   String rank;
   int point;
   String role;
+  String? phone; 
+
+
 
   UserDetail({
     required this.uid,
@@ -17,6 +20,7 @@ class UserDetail {
     required this.rank,
     required this.point,
     required this.role,
+    this.phone,
   });
 
   factory UserDetail.fromJson(Map<String, dynamic> json) => UserDetail(
@@ -28,6 +32,7 @@ class UserDetail {
     rank: json['rank'],
     point: json['point'],
     role: json['role'] ?? "user",
+    phone: json['phone'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -39,5 +44,6 @@ class UserDetail {
     "rank": rank,
     "point": point,
     "role": role,
+    "phone": phone, 
   };
 }

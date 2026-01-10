@@ -16,7 +16,6 @@ class OrderManagementPage extends StatefulWidget {
 class _OrderManagementPageState extends State<OrderManagementPage> {
   late List<OrderItem> orders = [];
   late Future<void> _loadDataFuture;
-
   Future<void> LoadData() async {
     orders = await FirebaseDBManager.orderService.getAllOrders();
 
@@ -97,4 +96,4 @@ class _OrderManagementPageState extends State<OrderManagementPage> {
       ),
     );
   }
-}
+}  

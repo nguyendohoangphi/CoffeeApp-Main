@@ -1,18 +1,59 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper function to check for admin role
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // Users can only read/write their own document.
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId;
+      allow create: if request.auth.uid != null;
+    }
+    
+    // Cart: Users can manage their own cart items.
+    match /users/{userId}/cart/{document=**} {
+      allow read, write, delete: if request.auth.uid == userId;
+    }
+
+    // Products, Categories, Tables, Ads: Public read, admin write.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /tables/{tableId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /ads/{adId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders: Users can create their own orders and read them. Admins can read all.
+    match /orders/{orderId} {
+      allow create: if request.auth.uid != null && request.resource.data.email == request.auth.token.email;
+      allow read: if (request.auth.uid != null && resource.data.email == request.auth.token.email) || isAdmin();
+      allow update, delete: if isAdmin(); // Only admins can modify/delete orders
+    }
+
+    // Revenue: Admin read-only. NO client writes.
+    // This enforces that revenue is only updated via backend/transaction logic.
+    match /revenue/{date} {
+      allow read: if isAdmin();
+      allow write: if false; // IMPORTANT: Prevents any client-side modification
+    }
+
+    // Fallback rule for any other collection
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2025, 7, 4);
+      allow read, write: if false;
     }
   }
 }

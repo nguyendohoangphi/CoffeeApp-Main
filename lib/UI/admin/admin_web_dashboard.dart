@@ -4,6 +4,7 @@ import 'package:coffeeapp/UI/admin/analystpage.dart';
 import 'package:coffeeapp/UI/admin/category_managementpage.dart';
 import 'package:coffeeapp/UI/admin/order_managementpage.dart';
 import 'package:coffeeapp/UI/admin/product_managementpage.dart';
+import 'package:coffeeapp/UI/admin/revenue_dashboard.dart';
 import 'package:coffeeapp/UI/admin/table_management.dart';
 import 'package:coffeeapp/UI/admin/user_management.dart';
 import 'package:coffeeapp/constants/app_colors.dart';
@@ -22,6 +23,7 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
 
   final List<Widget> _pages = [
     const AnalystPage(),
+    const RevenueDashboardPage(),
     const ProductManagementPage(),
     const CategoryManagementPage(),
     const OrderManagementPage(),
@@ -31,6 +33,7 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
 
   final List<String> _titles = [
     "Biểu Đồ Doanh Thu",
+    "Báo cáo Doanh thu",
     "Produce",
     "Category",
     "Order",
@@ -230,14 +233,15 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
               children: [
                 _buildSectionTitle("THỐNG KÊ"),
                 _buildMenuItem(0, "Dashboard", Icons.analytics_outlined),
+                _buildMenuItem(1, "Doanh thu", Icons.monetization_on_outlined),
                 
                 const SizedBox(height: 16),
                 _buildSectionTitle("QUẢN LÝ"),
-                _buildMenuItem(1, "Sản phẩm", Icons.coffee_outlined),
-                _buildMenuItem(2, "Danh mục", Icons.category_outlined),
-                _buildMenuItem(3, "Đơn hàng", Icons.receipt_long_outlined),
-                _buildMenuItem(4, "Bàn & Khu vực", Icons.table_restaurant_outlined),
-                _buildMenuItem(5, "Người dùng", Icons.people_outline),
+                _buildMenuItem(2, "Sản phẩm", Icons.coffee_outlined),
+                _buildMenuItem(3, "Danh mục", Icons.category_outlined),
+                _buildMenuItem(4, "Đơn hàng", Icons.receipt_long_outlined),
+                _buildMenuItem(5, "Bàn & Khu vực", Icons.table_restaurant_outlined),
+                _buildMenuItem(6, "Người dùng", Icons.people_outline),
               ],
             ),
           ),
@@ -245,7 +249,7 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
           // Logout Button
           Padding(
             padding: const EdgeInsets.all(24.0),
-            child: _buildMenuItem(6, "Đăng xuất", Icons.logout_rounded, isLogout: true),
+            child: _buildMenuItem(7, "Đăng xuất", Icons.logout_rounded, isLogout: true),
           ),
         ],
       ),
