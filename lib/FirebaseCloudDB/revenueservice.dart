@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:coffeeapp/Services/payment_service.dart';
+import 'package:coffeeapp/Entity/revenue.dart';
 
 class RevenueService {
   final CollectionReference _revenueRef =

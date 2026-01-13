@@ -1,4 +1,4 @@
-// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously
+// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously, unnecessary_import, deprecated_member_use
 
 import 'dart:ui';
 import 'package:coffeeapp/Services/payment_service.dart';
@@ -7,7 +7,7 @@ import 'package:coffeeapp/CustomMethod/generateCouponCode.dart';
 import 'package:coffeeapp/Entity/coupon.dart';
 import 'package:coffeeapp/FirebaseCloudDB/FirebaseDBManager.dart';
 import 'package:flutter/material.dart';
-import 'package:coffeeapp/CustomCard/dasheddivider.dart';
+//import 'package:coffeeapp/CustomCard/dasheddivider.dart';
 import 'package:coffeeapp/CustomMethod/generateCustomId.dart';
 import 'package:coffeeapp/CustomMethod/getCurrentFormattedDateTime.dart';
 import 'package:coffeeapp/Entity/cartitem.dart';

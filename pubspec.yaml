@@ -39,7 +39,8 @@ dependencies:
   google_generative_ai: ^0.4.7
   material_symbols_icons: ^4.2892.0
   flutter_svg: ^2.0.9
-    
+  flutter_stripe: ^10.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

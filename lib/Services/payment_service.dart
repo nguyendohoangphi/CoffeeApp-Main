@@ -1,65 +1,61 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+//import 'dart:convert';
+import 'package:flutter_stripe/flutter_stripe.dart';
+//import 'package:http/http.dart' as http;
+import 'revenue_service.dart';
 
-/// Represents the daily revenue summary stored in the 'revenue' collection.
-class Revenue {
-  final String date; // Document ID in YYYY-MM-DD format
-  final double totalRevenue;
-  final int totalOrders;
-  final List<String> orderIds;
+//// stripe deploy succeed, fix it = false
+const bool kEnableStripeBackend = true;
 
-  Revenue({
-    required this.date,
-    required this.totalRevenue,
-    required this.totalOrders,
-    required this.orderIds,
-  });
-
-  // Factory constructor to create a Revenue object from a Firestore document
-  factory Revenue.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return Revenue(
-      date: doc.id,
-      totalRevenue: (data['totalRevenue'] as num).toDouble(),
-      totalOrders: data['totalOrders'] as int,
-      orderIds: List<String>.from(data['orderIds']),
-    );
-  }
-
-  // Method to convert a Revenue object to a map for Firestore
-  Map<String, dynamic> toMap() {
-    return {
-      'totalRevenue': totalRevenue,
-      'totalOrders': totalOrders,
-      'orderIds': orderIds,
-    };
-  }
-}
-
-
-/// A service to simulate payment processing.
-/// In a real-world scenario, this would make HTTP requests to your backend,
-/// which in turn communicates with the payment gateway (e.g., MoMo).
 class PaymentService {
+  // static const String _paymentIntentUrl =  'https://asia-southeast1-phinom-coffee.cloudfunctions.net/createPaymentIntent';
 
-  /// Simulates processing a payment for a given order.
-  ///
-  /// This function fakes a delay to mimic a network call to a backend.
-  /// It will always return `true` to simulate a successful payment for this demo.
-  /// 
-  /// Returns `true` for a successful payment, `false` otherwise.
+  //// PROCESS PAYMENT
   Future<bool> processPayment({
     required double amount,
     required String orderId,
   }) async {
-    print(' simulating a call to a backend payment gateway...');
-    print('Processing payment for order $orderId with amount $amount');
+    try {
+      if (kEnableStripeBackend) {
+        final clientSecret = await _createPaymentIntent(
+          amount: amount,
+          currency: 'vnd',
+        );
 
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 2));
+        if (clientSecret == null) {
+          throw Exception('No client secret');
+        }
 
-    // In a real app, you'd get a real response from your backend.
-    // For this demo, we'll always assume the payment is successful.
-    print('Payment successful!');
-    return true; 
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: clientSecret,
+            merchantDisplayName: 'Coffee App',
+          ),
+        );
+
+        await Stripe.instance.presentPaymentSheet();
+      } else {
+        // DEMO MODE
+        await Future.delayed(const Duration(seconds: 2));
+      }
+
+      await RevenueService.saveRevenue(
+        amount: amount,
+        orderId: orderId,
+      );
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  //// CREATE PAYMENT INTENT (DEMO)
+  Future<String?> _createPaymentIntent({
+    required double amount,
+    required String currency,
+  }) async {
+    throw UnimplementedError(
+      'Stripe backend not enabled (demo mode)',
+    );
   }
 }
