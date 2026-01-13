@@ -107,10 +107,18 @@ class _CartState extends State<Cart> {
     // 4. Handle payment result
     if (paymentSuccess) {
       try {
+        print("DEBUG: Bắt đầu lưu đơn hàng lên Firebase... ID: ${orderItem.id}");
         // 4a. Place order and update revenue in a transaction
         await FirebaseDBManager.orderService
             .placeOrderAndUpdateRevenue(order: orderItem);
         
+        // --- FIX: Lưu chi tiết từng món hàng để HistoryOrder có thể tìm thấy ---
+        for (CartItem cartItem in GlobalData.cartItemList) {
+          cartItem.idOrder = orderItem.id;
+          await FirebaseDBManager.cartService.addCartItem(cartItem);
+        }
+        // ----------------------------------------------------------------------
+
         // 4b. Update user points and rank (previously in Buy method)
         await _updateUserPointsAndRank();
 
@@ -127,8 +135,10 @@ class _CartState extends State<Cart> {
             backgroundColor: Colors.green,
           ),
         );
+        print("DEBUG: Lưu đơn hàng thành công!");
         Navigator.of(context).pop(); // Go back from cart
       } catch (e) {
+        print("DEBUG: LỖI KHI LƯU ĐƠN HÀNG: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Đã xảy ra lỗi: ${e.toString()}')),
         );
@@ -342,7 +352,68 @@ class _CartState extends State<Cart> {
                                 ),
                               ],
                             ),
-                            child: Card(/* ... same card UI as before ... */)
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.asset(
+                                      item.product.imageUrl,
+                                      width: 70,
+                                      height: 70,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(item.product.name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                                        Text(_getSizeString(item.size), style: TextStyle(fontSize: 14, color: subTextColor)),
+                                        Text('${format.format(item.product.price)} đ', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.remove_circle_outline),
+                                        color: subTextColor,
+                                        onPressed: () {
+                                          setState(() {
+                                            if (item.amount > 1) item.amount--;
+                                          });
+                                        },
+                                      ),
+                                      Text('${item.amount}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                                      IconButton(
+                                        icon: const Icon(Icons.add_circle_outline),
+                                        color: AppColors.primary,
+                                        onPressed: () {
+                                          setState(() {
+                                            if (item.amount < 10) item.amount++;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+                            ),
                           );
                         },
                       ),

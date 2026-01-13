@@ -10,8 +10,8 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  Stripe.publishableKey = 'pk_test_YOUR_PUBLISHABLE_KEY_HERE';
-  await Stripe.instance.applySettings();
+  // Stripe.publishableKey = 'pk_test_51Sp0V8HhBuR1YdryQrHXMXFcOEz9zcxqTVuhbVTo6GQW28BCUuQ3R0J2k1dyAr7NUTDytoo4Mb0IRBKmt8q00RoG00fyZwDkOf';
+  // await Stripe.instance.applySettings();
 
   //await dotenv.load();
   runApp(const MainApp());

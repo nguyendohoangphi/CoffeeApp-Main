@@ -4,7 +4,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'revenue_service.dart';
 
 //// stripe deploy succeed, fix it = false
-const bool kEnableStripeBackend = true;
+const bool kEnableStripeBackend = false;
 
 class PaymentService {
   // static const String _paymentIntentUrl =  'https://asia-southeast1-phinom-coffee.cloudfunctions.net/createPaymentIntent';
