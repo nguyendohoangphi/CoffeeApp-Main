@@ -1,1 +1,48 @@
-{"firestore":{"database":"(default)","location":"asia-southeast1","rules":"firestore.rules","indexes":"firestore.indexes.json"},"flutter":{"platforms":{"android":{"default":{"projectId":"phinom-coffee","appId":"1:14197951991:android:bb83499a4a46d89d2372f2","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"phinom-coffee","configurations":{"android":"1:14197951991:android:bb83499a4a46d89d2372f2","ios":"1:14197951991:ios:32d2c0d7dcceaaf92372f2","macos":"1:14197951991:ios:32d2c0d7dcceaaf92372f2","web":"1:14197951991:web:113de3a34d88fde52372f2","windows":"1:14197951991:web:d4175d335384565a2372f2"}}}}}}
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "asia-southeast1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "phinom-coffee",
+          "appId": "1:14197951991:android:bb83499a4a46d89d2372f2",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "phinom-coffee",
+          "configurations": {
+            "android": "1:14197951991:android:bb83499a4a46d89d2372f2",
+            "ios": "1:14197951991:ios:32d2c0d7dcceaaf92372f2",
+            "macos": "1:14197951991:ios:32d2c0d7dcceaaf92372f2",
+            "web": "1:14197951991:web:113de3a34d88fde52372f2",
+            "windows": "1:14197951991:web:d4175d335384565a2372f2"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}
