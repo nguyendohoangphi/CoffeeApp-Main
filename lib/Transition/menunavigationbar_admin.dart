@@ -1,12 +1,12 @@
 import 'package:animate_gradient/animate_gradient.dart';
-import 'package:coffeeapp/CustomCard/colorsetupbackground.dart';
-import 'package:coffeeapp/UI/SplashScreen/splashscreen.dart';
-import 'package:coffeeapp/UI/admin/analystpage.dart';
-import 'package:coffeeapp/UI/admin/category_managementpage.dart';
-import 'package:coffeeapp/UI/admin/order_managementpage.dart';
-import 'package:coffeeapp/UI/admin/product_managementpage.dart';
-import 'package:coffeeapp/UI/admin/table_management.dart';
-import 'package:coffeeapp/UI/admin/user_management.dart';
+import 'package:coffeeapp/widgets/colorsetupbackground.dart';
+import 'package:coffeeapp/screens/SplashScreen/splashscreen.dart';
+import 'package:coffeeapp/screens/admin/analystpage.dart';
+import 'package:coffeeapp/screens/admin/category_managementpage.dart';
+import 'package:coffeeapp/screens/admin/order_managementpage.dart';
+import 'package:coffeeapp/screens/admin/product_managementpage.dart';
+import 'package:coffeeapp/screens/admin/table_management.dart';
+import 'package:coffeeapp/screens/admin/user_management.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 

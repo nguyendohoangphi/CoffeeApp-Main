@@ -1,6 +1,6 @@
 import 'package:coffeeapp/Transition/menunavigationbar.dart';
 import 'package:coffeeapp/Transition/menunavigationbar_admin.dart';
-import 'package:coffeeapp/UI/admin/admin_web_dashboard.dart';
+import 'package:coffeeapp/screens/admin/admin_web_dashboard.dart';
 import 'package:flutter/foundation.dart'; // Để dùng kIsWeb
 import 'package:flutter/material.dart';
 

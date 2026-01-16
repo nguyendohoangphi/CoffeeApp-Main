@@ -1,7 +1,7 @@
 import 'package:coffeeapp/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:coffeeapp/UI/SplashScreen/splashscreen.dart';
+import 'package:coffeeapp/screens/SplashScreen/splashscreen.dart';
 //import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart'; 
 

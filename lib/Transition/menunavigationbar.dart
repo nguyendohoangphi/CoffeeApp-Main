@@ -1,12 +1,12 @@
 import 'package:animate_gradient/animate_gradient.dart';
-import 'package:coffeeapp/CustomCard/colorsetupbackground.dart';
-import 'package:coffeeapp/Entity/global_data.dart';
-import 'package:coffeeapp/UI/Order/cart.dart';
+import 'package:coffeeapp/widgets/colorsetupbackground.dart';
+import 'package:coffeeapp/models/global_data.dart';
+import 'package:coffeeapp/screens/Order/cart.dart';
 import 'package:coffeeapp/constants/app_colors.dart'; // Import file màu mới
 import 'package:flutter/material.dart';
-import 'package:coffeeapp/UI/MainScreen/category.dart';
-import 'package:coffeeapp/UI/MainScreen/home.dart';
-import 'package:coffeeapp/UI/MainScreen/profile.dart';
+import 'package:coffeeapp/screens/MainScreen/category.dart';
+import 'package:coffeeapp/screens/MainScreen/home.dart';
+import 'package:coffeeapp/screens/MainScreen/profile.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:badges/badges.dart' as badges;
 
