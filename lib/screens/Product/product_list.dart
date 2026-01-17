@@ -128,7 +128,7 @@ class _ProductListState extends State<ProductList> {
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            childAspectRatio: 0.7, // Adjust ratio for the new card design
+            childAspectRatio: 0.62, // Adjusted ratio to prevent bottom overflow
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
           ),

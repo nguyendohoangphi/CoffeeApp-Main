@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // 1. Tông màu chính (Brand Colors)
-  // Giữ nguyên màu cam nhận diện nhưng tinh chỉnh cho hiện đại hơn
   static const Color primary = Color(0xFFFF8A00); 
   static const Color primaryDark = Color(0xFFFF9E44); // Cam sáng hơn cho Dark mode
 
@@ -49,14 +48,14 @@ class AppColors {
     spreadRadius: 0,
   );
 
-  // 7. Legacy Mapping (Giữ lại để tương thích code cũ chưa refactor kịp)
+  // 7. Legacy Mapping 
   static const Color secondary = Color(0xFF4E342E); 
-  static const Color accent = success; // Map accent cũ sang success mới
+  static const Color accent = success; 
   
   // Helper để lấy màu shadow theo theme
   static BoxShadow getShadow(bool isDark) => isDark ? darkShadow : softShadow;
 
-  // ===== Legacy aliases để fix code cũ =====
+  // ===== Legacy aliases =====
 static const Color primaryColor = primary;
 
 static const Color backgroundColor = backgroundLight;

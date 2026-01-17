@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:coffeeapp/models/cartitem.dart';
+import 'package:coffeeapp/models/product.dart';
 import 'package:coffeeapp/services/firebase_db_manager.dart';
 import 'package:coffeeapp/constants/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -20,12 +21,20 @@ class HistoryOrder extends StatefulWidget {
 class _HistoryOrderState extends State<HistoryOrder> {
   late List<OrderItem> orderItemList = [];
   late List<CartItem> cartItemList = [];
+  // Optimization: Cache future
+  late Future<void> _loadDataFuture;
 
   // Theme Helpers
   Color get backgroundColor => widget.isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
   Color get cardColor => widget.isDark ? AppColors.cardDark : Colors.white;
   Color get textColor => widget.isDark ? AppColors.textMainDark : AppColors.textMainLight;
   
+  @override
+  void initState() {
+    super.initState();
+    _loadDataFuture = LoadData();
+  }
+
   String _getSizeString(SizeOption size) {
     switch (size) {
       case SizeOption.Small:
@@ -40,15 +49,30 @@ class _HistoryOrderState extends State<HistoryOrder> {
   Future<void> LoadData() async {
     orderItemList = await FirebaseDBManager.orderService.getOrdersByEmail(GlobalData.userDetail.email);
     
-    // Sắp xếp danh sách: Mới nhất lên đầu
+    // Sort: Newest first
     orderItemList.sort((a, b) {
-      DateTime dateA = DateFormat('dd/MM/yyyy – HH:mm:ss').parse(a.createDate);
-      DateTime dateB = DateFormat('dd/MM/yyyy – HH:mm:ss').parse(b.createDate);
-      return dateB.compareTo(dateA);
+      try {
+        DateTime dateA = DateFormat('dd/MM/yyyy – HH:mm:ss').parse(a.createDate);
+        DateTime dateB = DateFormat('dd/MM/yyyy – HH:mm:ss').parse(b.createDate);
+        return dateB.compareTo(dateA);
+      } catch (e) {
+        return 0;
+      }
     });
 
+    // Load Cart Items for all orders
     for (OrderItem orderItem in orderItemList) {
-      cartItemList.addAll(await FirebaseDBManager.cartService.getCartItemsByOrder(orderItem.id));
+      List<CartItem> items = await FirebaseDBManager.cartService.getCartItemsByOrder(orderItem.id);
+      
+      // Crucial Step: Populate Product Info for each Cart Item
+      // The CartItem from DB only has productName. We need full Product object for image/price.
+      for (var item in items) {
+        Product product = await FirebaseDBManager.productService.getProductByName(item.productName);
+        item.product = product;
+      }
+      
+      orderItem.cartItems = items;
+      cartItemList.addAll(items);
     }
   }
 
@@ -96,7 +120,7 @@ class _HistoryOrderState extends State<HistoryOrder> {
         ),
       ),
       body: FutureBuilder<void>(
-        future: LoadData(),
+        future: _loadDataFuture, // Use cached future
         builder: (context, asyncSnapshot) {
           final format = NumberFormat("#,###", "vi_VN");
           
@@ -142,12 +166,7 @@ class _HistoryOrderState extends State<HistoryOrder> {
               itemBuilder: (context, index) {
                 OrderItem orderItem = orderItemList[index];
                 
-                // Get items specifically for this order
-                var itemsFromDB = cartItemList.where((element) => element.idOrder == orderItem.id).toList();
-                if (itemsFromDB.isNotEmpty) {
-                  orderItem.cartItems = itemsFromDB;
-                }
-                
+                // Color mapping
                 Color statusColor = AppColors.primary;
                 String statusText = orderItem.statusOrder.toString().split('.').last;
                 if (statusText == 'Waiting') {
@@ -156,7 +175,13 @@ class _HistoryOrderState extends State<HistoryOrder> {
                 } else if (statusText == 'Confirmed') {
                    statusText = 'Đã xác nhận';
                    statusColor = Colors.blue;
-                } else if (statusText == 'Done') {
+                } else if (statusText == 'Processing') {
+                   statusText = 'Đang làm';
+                   statusColor = Colors.blue; 
+                } else if (statusText == 'Shipping') {
+                   statusText = 'Đang giao';
+                   statusColor = Colors.purple;
+                } else if (statusText == 'Finished') { // Or Done
                    statusText = 'Hoàn thành';
                    statusColor = Colors.green;
                 } else if (statusText == 'Cancelled') {
@@ -229,21 +254,7 @@ class _HistoryOrderState extends State<HistoryOrder> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
-                                child: item.product.imageUrl.startsWith('http')
-                                    ? Image.network(
-                                        item.product.imageUrl,
-                                        width: 64,
-                                        height: 64,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(color: Colors.grey[300], width: 64, height: 64),
-                                      )
-                                    : Image.asset(
-                                        item.product.imageUrl,
-                                        width: 64,
-                                        height: 64,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(color: Colors.grey[300], width: 64, height: 64),
-                                      ),
+                                child: _buildProductImage(item.product.imageUrl),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -285,7 +296,8 @@ class _HistoryOrderState extends State<HistoryOrder> {
                           children: [
                             Text("Tổng tiền", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: textColor)),
                             Text(
-                              "${format.format(double.tryParse(orderItem.total) ?? 0)} đ",
+                              // Parse total from string safely
+                              "${format.format(double.tryParse(orderItem.total) ?? double.tryParse(orderItem.total.replaceAll(RegExp(r'[^\d]'), '')) ?? 0)} đ",
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: AppColors.primary),
                             ),
                           ],
@@ -302,5 +314,24 @@ class _HistoryOrderState extends State<HistoryOrder> {
       ),
     );
   }
-}
 
+  Widget _buildProductImage(String url) {
+    if (url.startsWith('http')) {
+      return Image.network(
+        url,
+        width: 64,
+        height: 64,
+        fit: BoxFit.cover,
+        errorBuilder: (_,__,___) => Container(color: Colors.grey[300], width: 64, height: 64, child: const Icon(Icons.broken_image)),
+      );
+    } else {
+      return Image.asset(
+        url,
+        width: 64,
+        height: 64,
+        fit: BoxFit.cover,
+        errorBuilder: (_,__,___) => Container(color: Colors.grey[300], width: 64, height: 64, child: const Icon(Icons.image)),
+      );
+    }
+  }
+}

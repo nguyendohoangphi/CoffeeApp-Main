@@ -1,5 +1,8 @@
 // File: lib/UI/SplashScreen/splashscreen.dart
 import 'dart:async';
+import 'package:coffeeapp/Transition/menunavigationbar.dart';
+import 'package:coffeeapp/models/global_data.dart';
+import 'package:coffeeapp/services/firebase_db_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -28,12 +31,45 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 700),
     );
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startSplashFlow());
+   // WidgetsBinding.instance.addPostFrameCallback((_) => _startSplashFlow());
   }
 
-  Future<void> _startSplashFlow() async {
-    await _audioPlayer.setVolume(1.0);
-  //  await _audioPlayer.play(AssetSource('audio/coffee_pour_sound.mp3'));
+  // Future<void> _startSplashFlow() async {
+  //   await _audioPlayer.setVolume(1.0);
+  // //  await _audioPlayer.play(AssetSource('audio/coffee_pour_sound.mp3'));
+  // }
+
+  void _checkLoginAndNavigate() async {
+     // Check if user is logged in
+    final userProfile = await FirebaseDBManager.authService.getProfile();
+    
+    if (userProfile != null) {
+      // User is logged in, save to global data
+      GlobalData.userDetail = userProfile;
+      if (!mounted) return;
+      
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const MenuNavigationBar(isDark: false, selectedIndex: 0),
+          transitionsBuilder: (_, animation, __, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 600),
+        ),
+      );
+    } else {
+      // Not logged in
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const CoffeeLoginRegisterScreen(),
+          transitionsBuilder: (_, animation, __, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 600),
+        ),
+      );
+    }
   }
 
   @override
@@ -80,15 +116,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                     // Logic chuyển màn hình
                     Future.delayed(Duration(milliseconds: totalMs - 200), () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (_, __, ___) => const CoffeeLoginRegisterScreen(),
-                          transitionsBuilder: (_, animation, __, child) =>
-                              FadeTransition(opacity: animation, child: child),
-                          transitionDuration: const Duration(milliseconds: 600),
-                        ),
-                      );
+                        _checkLoginAndNavigate();
                     });
                   },
                 ),
