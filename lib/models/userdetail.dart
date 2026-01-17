@@ -24,13 +24,13 @@ class UserDetail {
   });
 
   factory UserDetail.fromJson(Map<String, dynamic> json) => UserDetail(
-    uid: json['uid'],
-    username: json['username'],
-    email: json['email'],
+    uid: json['uid'] ?? "",
+    username: json['username'] ?? "Unknown User",
+    email: json['email'] ?? "",
     password: json['password'] ?? "",
-    photoURL: json['photoURL'],
-    rank: json['rank'],
-    point: json['point'],
+    photoURL: json['photoURL'] ?? "",
+    rank: json['rank'] ?? "Bronze",
+    point: json['point'] ?? 0,
     role: json['role'] ?? "user",
     phone: json['phone'],
   );

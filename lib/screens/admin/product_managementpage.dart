@@ -1,10 +1,9 @@
 import 'dart:ui';
-
 import 'package:coffeeapp/models/product.dart';
 import 'package:coffeeapp/services/firebase_db_manager.dart';
 import 'package:coffeeapp/screens/admin/addeditproductpage.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+import 'package:intl/intl.dart';
 
 class ProductManagementPage extends StatefulWidget {
   const ProductManagementPage({super.key});
@@ -14,15 +13,28 @@ class ProductManagementPage extends StatefulWidget {
 }
 
 class _ProductManagementPageState extends State<ProductManagementPage> {
-  late List<Product> mockProducts;
+  late List<Product> mockProducts = [];
   late List<Product> productSearchList = [];
-
   late Future<void> _loadDataFuture;
+  final TextEditingController _searchController = TextEditingController();
 
-  // ignore: non_constant_identifier_names
   Future<void> LoadData() async {
     mockProducts = await FirebaseDBManager.productService.getProducts();
     productSearchList = mockProducts;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDataFuture = LoadData();
+  }
+
+  void _filterProducts(String query) {
+    setState(() {
+      productSearchList = mockProducts.where((p) => 
+        p.name.toLowerCase().contains(query.toLowerCase())
+      ).toList();
+    });
   }
 
   Future<void> _addProduct() async {
@@ -30,162 +42,208 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
       context,
       MaterialPageRoute(builder: (context) => AddEditProductPage()),
     );
-
-    if (result == true) {
-      setState(() {
-        _loadDataFuture = LoadData();
-      });
-    }
+    if (result == true) setState(() => _loadDataFuture = LoadData());
   }
 
   Future<void> _editProduct(Product product) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => AddEditProductPage(product: product),
-      ),
+      MaterialPageRoute(builder: (context) => AddEditProductPage(product: product)),
     );
-
-    if (result == true) {
-      setState(() {
-        _loadDataFuture = LoadData();
-      });
-    }
+    if (result == true) setState(() => _loadDataFuture = LoadData());
   }
 
   Future<void> _deleteProduct(Product product) async {
-    setState(() => mockProducts.remove(product));
-    await FirebaseDBManager.productService.deleteProductByName(product.name);
-    setState(() {
-      _loadDataFuture = LoadData();
-    });
-  }
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Xác nhận xóa"),
+        content: Text("Bạn có chắc muốn xóa ${product.name}?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Hủy")),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Xóa")),
+        ],
+      ),
+    ) ?? false;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _loadDataFuture = LoadData();
+    if (confirm) {
+      await FirebaseDBManager.productService.deleteProductByName(product.name);
+      setState(() => _loadDataFuture = LoadData());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _loadDataFuture,
-      builder: (context, asyncSnapshot) {
-        if (asyncSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: Lottie.asset(
-              'assets/background/loading.json', // Thay bằng đường dẫn đúng tới file Lottie của bạn
-              width: 200,
-              height: 200,
-              fit: BoxFit.contain,
-            ),
-          );
-        } else if (asyncSnapshot.hasError) {
-          return Center(child: Text('Lỗi: ${asyncSnapshot.error}'));
-        } else {
-          return Scaffold(
-            backgroundColor: Colors.transparent,
-            // Trên Web Dashboard chúng ta đã có Header riêng, nhưng giữ lại AppBar để chứa thanh tìm kiếm
-            appBar: AppBar(
-              automaticallyImplyLeading: false,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              // Nếu muốn ẩn tiêu đề trên web vì đã có ở dashboard cha:
-              title: const Text('Quản lý sản phẩm'),
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(50),
-                child: SizedBox(
-                  width: 250,
-                  height: 40,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.search),
-                      hintText: 'Tìm sản phẩm...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+    final currencyFormat = NumberFormat("#,###", "vi_VN");
+
+    return Container(
+      color: Colors.transparent,
+      child: Column(
+        children: [
+          // Header
+           Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Quản lý sản phẩm", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 250,
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: "Tìm sản phẩm...",
+                          hintStyle: TextStyle(color: Colors.grey.shade500),
+                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                        style: const TextStyle(color: Colors.black87),
+                        onChanged: _filterProducts,
                       ),
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        productSearchList = mockProducts
-                            .where(
-                              (element) => element.name
-                                  .toLowerCase()
-                                  .trim()
-                                  .contains(value.toLowerCase().trim()),
-                            )
-                            .toList();
-                      });
+                    const SizedBox(width: 16),
+                    ElevatedButton.icon(
+                      onPressed: _addProduct,
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text("Thêm mới", style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Grid Content
+          Expanded(
+            child: FutureBuilder(
+              future: _loadDataFuture,
+              builder: (context, snapshot) {
+                 if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text("Lỗi: ${snapshot.error}"));
+                } else if (productSearchList.isEmpty) {
+                  return const Center(child: Text("Không tìm thấy sản phẩm"));
+                }
+
+                return ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                  ),
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 220,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                    ),
+                    itemCount: productSearchList.length,
+                    itemBuilder: (context, index) {
+                      final product = productSearchList[index];
+                      return _buildProductCard(product, currencyFormat);
                     },
                   ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductCard(Product product, NumberFormat format) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image
+          Expanded(
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: Image.asset( // Should be network if URL is http
+                    product.imageUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_,__,___) => Container(color: Colors.grey[200], child: const Icon(Icons.broken_image)),
+                  ),
                 ),
-              ),
-            ),
-            body: ScrollConfiguration(
-              // Cấu hình cho phép kéo chuột trên Web
-              behavior: ScrollConfiguration.of(context).copyWith(
-                dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-              ),
-              child: ListView.builder(
-                itemCount: productSearchList.length,
-                itemBuilder: (context, index) {
-                  final product = productSearchList[index];
-                  return Dismissible(
-                    key: Key(product.name + product.createDate),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      color: Colors.red,
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    // Thêm confirmDismiss để tránh xóa nhầm trên web
-                    confirmDismiss: (direction) async {
-                      return await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text("Xác nhận xóa"),
-                            content: Text("Bạn có chắc muốn xóa sản phẩm ${product.name}?"),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(false),
-                                child: const Text("Hủy"),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(true),
-                                child: const Text("Xóa", style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    onDismissed: (_) => _deleteProduct(product),
-                    child: ListTile(
-                      leading: Image.asset(
-                        product.imageUrl,
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => _editProduct(product),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          child: const Icon(Icons.edit, size: 16, color: Colors.blue),
+                        ),
                       ),
-                      title: Text(product.name),
-                      subtitle: Text('${product.price.toStringAsFixed(0)} đ'),
-                      onTap: () => _editProduct(product),
-                    ),
-                  );
-                },
-              ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => _deleteProduct(product),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          child: const Icon(Icons.delete, size: 16, color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: _addProduct,
-              child: const Icon(Icons.add),
+          ),
+          
+          // Info
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${format.format(product.price)} đ",
+                  style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
-          );
-        }
-      },
+          )
+        ],
+      ),
     );
   }
 }

@@ -282,13 +282,14 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: "Tìm kiếm...",
+                        hintStyle: TextStyle(color: Colors.grey.shade500),
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
                       ),
-                      style: TextStyle(color: Colors.grey.shade800),
+                      style: const TextStyle(color: Colors.black87),
                     ),
                   ),
                 ],

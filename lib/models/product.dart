@@ -2,7 +2,10 @@
 String enumToString(Object enumValue) => enumValue.toString().split('.').last;
 
 //trans data from Fristore string thành object enum
-T stringToEnum<T>(List<T> values, String value) => values.firstWhere((e) => enumToString(e!) == value);
+T stringToEnum<T>(List<T> values, String value) => values.firstWhere(
+  (e) => enumToString(e!) == value,
+  orElse: () => values.first,
+);
 
 class Product {
   //final no change after create
