@@ -83,9 +83,15 @@ class _MenuNavigationBarState extends State<MenuNavigationBar> {
             )
           : null,
 
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: pages,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        child: KeyedSubtree(
+          key: ValueKey<int>(_selectedIndex),
+          child: pages[_selectedIndex],
+        ),
       ),
 
       // --- THANH ĐIỀU HƯỚNG HIỆN ĐẠI ---

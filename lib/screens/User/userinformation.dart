@@ -1,12 +1,10 @@
 import 'dart:ui';
 import 'package:animate_gradient/animate_gradient.dart';
-//import 'package:coffeeapp/widgets/colorsetupbackground.dart';
 import 'package:coffeeapp/models/cartitem.dart';
 import 'package:coffeeapp/models/coupon.dart';
 import 'package:coffeeapp/models/global_data.dart';
 import 'package:coffeeapp/models/orderitem.dart';
 import 'package:coffeeapp/services/firebase_db_manager.dart';
-import 'package:coffeeapp/Transition/menunavigationbar.dart';
 import 'package:coffeeapp/constants/app_colors.dart'; // Import bộ màu chuẩn
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -151,7 +149,21 @@ class _UserInformationState extends State<UserInformation> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: textColor),
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: cardColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                 BoxShadow(
+                   color: AppColors.getShadow(widget.isDark).color, 
+                   blurRadius: 10, 
+                   offset: const Offset(0, 4)
+                 )
+              ]
+            ),
+            child: Icon(Icons.arrow_back, color: textColor, size: 20),
+          ),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -159,7 +171,7 @@ class _UserInformationState extends State<UserInformation> {
         title: Text(
           'Thông tin tài khoản',
           style: TextStyle(
-            fontSize: 22, 
+            fontSize: 24, 
             fontWeight: FontWeight.bold, 
             color: textColor
           ),
@@ -176,7 +188,7 @@ class _UserInformationState extends State<UserInformation> {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -185,13 +197,13 @@ class _UserInformationState extends State<UserInformation> {
                         height: 200,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(30),
                           boxShadow: [
-                            BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 15, offset: Offset(0, 8))
+                            BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: Offset(0, 10))
                           ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(30),
                           child: AnimateGradient(
                             primaryColors: rankGradients.entries.elementAt(currentRank).value.entries.first.value,
                             secondaryColors: rankGradients.entries.elementAt(currentRank).value.entries.last.value,
@@ -205,28 +217,28 @@ class _UserInformationState extends State<UserInformation> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.all(3),
+                                      padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
                                       child: CircleAvatar(
-                                        radius: 35,
+                                        radius: 40,
                                         backgroundImage: AssetImage(GlobalData.userDetail.photoURL),
                                       ),
                                     ),
-                                    const SizedBox(height: 10),
+                                    const SizedBox(height: 12),
                                     Text(
                                       GlobalData.userDetail.username,
-                                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                                     ),
-                                    const SizedBox(height: 5),
+                                    const SizedBox(height: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                                       decoration: BoxDecoration(
                                         color: Colors.black26,
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text(
                                         GlobalData.userDetail.rank,
-                                        style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500),
+                                        style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                   ],
@@ -237,16 +249,22 @@ class _UserInformationState extends State<UserInformation> {
                         ),
                       ),
 
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 30),
 
                       // --- SECTION 1: TỔNG QUAN ---
                       _buildSectionTitle("Thống kê hoạt động"),
                       Container(
-                        padding: const EdgeInsets.all(15),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: cardColor,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: Offset(0, 4))],
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getShadow(widget.isDark).color, 
+                              blurRadius: 15, 
+                              offset: const Offset(0, 5)
+                            )
+                          ],
                         ),
                         child: Column(
                           children: [
@@ -259,13 +277,13 @@ class _UserInformationState extends State<UserInformation> {
                         ),
                       ),
 
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 30),
 
                       // --- SECTION 2: DANH SÁCH ĐỒ UỐNG ---
                       _buildSectionTitle("Đồ uống đã thử"),
                       Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
+                        spacing: 12,
+                        runSpacing: 12,
                         children: drinkList.map((drink) {
                           return Chip(
                             label: Text(drink, style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
@@ -273,14 +291,14 @@ class _UserInformationState extends State<UserInformation> {
                             avatar: Icon(Icons.check_circle, size: 18, color: AppColors.primary),
                             elevation: 2,
                             shadowColor: Colors.black12,
-                            padding: const EdgeInsets.all(8),
-                            side: BorderSide.none,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.all(10),
+                            side: BorderSide(color: AppColors.primary.withOpacity(0.1)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           );
                         }).toList(),
                       ),
 
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 30),
 
                       // --- SECTION 3: TIẾN TRÌNH ---
                       Row(
@@ -290,13 +308,19 @@ class _UserInformationState extends State<UserInformation> {
                           Image.asset(ranks.entries.elementAt(currentRank).value, width: 30, height: 30),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           color: cardColor,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getShadow(widget.isDark).color, 
+                              blurRadius: 15, 
+                              offset: const Offset(0, 5)
+                            )
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,51 +330,63 @@ class _UserInformationState extends State<UserInformation> {
                               child: LinearProgressIndicator(
                                 value: rankProgress.clamp(0.0, 1.0),
                                 minHeight: 12,
-                                backgroundColor: Colors.grey[200],
+                                backgroundColor: widget.isDark ? Colors.grey[800] : Colors.grey[200],
                                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 12),
                             Text(
                               "Cần thêm $pointsToNext điểm để lên ${ranks.entries.elementAt(nextRank).key}",
-                              style: TextStyle(color: subTextColor, fontSize: 13),
+                              style: TextStyle(color: subTextColor, fontSize: 14),
                             ),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 30),
 
                       // --- SECTION 4: COUPON ---
                       _buildSectionTitle("Kho Voucher"),
                       SizedBox(
-                        height: 140,
+                        height: 150,
                         child: coupons.isEmpty 
-                          ? Center(child: Text("Bạn chưa có mã giảm giá nào", style: TextStyle(color: subTextColor)))
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.discount_outlined, color: subTextColor, size: 40),
+                                  const SizedBox(height: 8),
+                                  Text("Bạn chưa có voucher nào", style: TextStyle(color: subTextColor)),
+                                ],
+                              )
+                            )
                           : ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: coupons.length,
-                              separatorBuilder: (_,__) => const SizedBox(width: 15),
+                              separatorBuilder: (_,__) => const SizedBox(width: 16),
                               itemBuilder: (context, index) {
                                 return Container(
-                                  width: 200,
-                                  padding: const EdgeInsets.all(15),
+                                  width: 220,
+                                  padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color: Colors.orange[50],
-                                    borderRadius: BorderRadius.circular(16),
+                                    color: widget.isDark ? Color(0xFF2C2520) : Colors.orange[50], // Tối hơn cho dark mode
+                                    borderRadius: BorderRadius.circular(20),
                                     border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                    boxShadow: [
+                                       BoxShadow(color: Colors.orange.withOpacity(0.1), blurRadius: 10, offset: Offset(0, 4))
+                                    ]
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.confirmation_number_outlined, color: Colors.orange, size: 30),
-                                      const SizedBox(height: 10),
+                                      const Icon(Icons.confirmation_number_outlined, color: Colors.orange, size: 36),
+                                      const SizedBox(height: 12),
                                       Text(
                                         coupons[index],
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.orange),
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.orange),
                                       ),
-                                      const Text("Mã giảm giá", style: TextStyle(fontSize: 12, color: Colors.orangeAccent)),
+                                      const Text("Mã giảm giá đặc biệt", style: TextStyle(fontSize: 13, color: Colors.orangeAccent)),
                                     ],
                                   ),
                                 );
@@ -358,21 +394,22 @@ class _UserInformationState extends State<UserInformation> {
                             ),
                       ),
 
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 40),
 
                       // --- NÚT ĐỔI MẬT KHẨU ---
                       SizedBox(
                         width: double.infinity,
+                        height: 56,
                         child: ElevatedButton.icon(
                           onPressed: _showChangePasswordDialog,
-                          icon: const Icon(Icons.lock_reset),
-                          label: const Text("Đổi mật khẩu"),
+                          icon: const Icon(Icons.lock_reset, color: Colors.white),
+                          label: const Text("Đổi mật khẩu", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                            elevation: 4,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            elevation: 5,
+                            shadowColor: AppColors.primary.withOpacity(0.4),
                           ),
                         ),
                       ),
@@ -393,13 +430,14 @@ class _UserInformationState extends State<UserInformation> {
 
   Widget _buildSectionTitle(String title, {bool noPadding = false}) {
     return Padding(
-      padding: noPadding ? EdgeInsets.zero : const EdgeInsets.only(bottom: 15),
+      padding: noPadding ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
       child: Text(
-        title,
+        title.toUpperCase(),
         style: TextStyle(
-          fontSize: 18, 
+          fontSize: 14, 
           fontWeight: FontWeight.bold, 
-          color: textColor
+          color: widget.isDark ? Colors.grey[400] : Colors.grey[600],
+          letterSpacing: 1.2
         ),
       ),
     );
@@ -407,17 +445,17 @@ class _UserInformationState extends State<UserInformation> {
 
   Widget _buildStatRow(IconData icon, String title, String value, Color iconColor) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
             child: Icon(icon, color: iconColor, size: 24),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: textColor)),
+            child: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textColor)),
           ),
           Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
         ],
@@ -426,10 +464,10 @@ class _UserInformationState extends State<UserInformation> {
   }
 
   Widget _buildDivider() {
-    return Divider(color: Colors.grey.withOpacity(0.1), height: 20);
+    return Divider(color: widget.isDark ? Colors.grey[800] : Colors.grey[100], height: 1);
   }
 
-  // Logic Dialog Đổi mật khẩu (Giữ nguyên logic)
+  // Logic Dialog Đổi mật khẩu
   Future<void> _showChangePasswordDialog() async {
     final TextEditingController oldPassController = TextEditingController();
     final TextEditingController newPassController = TextEditingController();
@@ -447,22 +485,30 @@ class _UserInformationState extends State<UserInformation> {
           builder: (context, setStateDialog) {
             return AlertDialog(
               backgroundColor: cardColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
               title: Row(
                 children: [
-                  Icon(Icons.security, color: AppColors.primary),
-                  const SizedBox(width: 10),
-                  Text("Đổi mật khẩu", style: TextStyle(color: textColor)),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12)
+                    ),
+                    child: Icon(Icons.security, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 12),
+                  Text("Đổi mật khẩu", style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const SizedBox(height: 10),
                     _buildPassField(oldPassController, "Mật khẩu cũ", isOldVisible, () => setStateDialog(() => isOldVisible = !isOldVisible)),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
                     _buildPassField(newPassController, "Mật khẩu mới", isNewVisible, () => setStateDialog(() => isNewVisible = !isNewVisible)),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
                     _buildPassField(confirmPassController, "Nhập lại mật khẩu mới", isConfirmVisible, () => setStateDialog(() => isConfirmVisible = !isConfirmVisible)),
                     
                     if (isLoading)
@@ -470,14 +516,14 @@ class _UserInformationState extends State<UserInformation> {
                   ],
                 ),
               ),
+              actionsPadding: const EdgeInsets.all(20),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Hủy", style: TextStyle(color: subTextColor)),
+                  child: Text("Hủy", style: TextStyle(color: subTextColor, fontSize: 16)),
                 ),
                 ElevatedButton(
                   onPressed: isLoading ? null : () async {
-                    // ... (Giữ nguyên logic xử lý Firebase của bạn) ...
                     final oldPass = oldPassController.text.trim();
                     final newPass = newPassController.text.trim();
                     final confirmPass = confirmPassController.text.trim();
@@ -507,9 +553,11 @@ class _UserInformationState extends State<UserInformation> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
                   ),
-                  child: const Text("Xác nhận", style: TextStyle(color: Colors.white)),
+                  child: const Text("Xác nhận", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ],
             );
@@ -532,8 +580,10 @@ class _UserInformationState extends State<UserInformation> {
           icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: subTextColor),
           onPressed: onToggle,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.primary)),
+        filled: true,
+        fillColor: widget.isDark ? Colors.black.withOpacity(0.2) : Colors.grey[100],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.primary)),
       ),
     );
   }

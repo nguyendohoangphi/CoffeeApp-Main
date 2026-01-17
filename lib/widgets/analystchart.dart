@@ -32,6 +32,10 @@ class _AnalystChartState extends State<AnalystChart> {
       return;
     }
 
+    if (widget.chartDataList.length < 4) {
+      return;
+    }
+
     if (widget.chartDataList[0].data.isNotEmpty &&
         widget.chartDataList[1].data.isNotEmpty &&
         widget.chartDataList[2].data.isNotEmpty &&
@@ -85,64 +89,67 @@ class _AnalystChartState extends State<AnalystChart> {
                 ),
                 const SizedBox(height: 30),
 
-                buildPieChartSection(
-                  title: 'Doanh thu',
-                  dataList: widget.chartDataList[0].data.isNotEmpty
-                      ? widget.chartDataList[0].data
-                      : [],
-                  total: totalRevenue,
-                  sizePieChart: sizePieChart,
-                  sectionColors: Colors.primaries,
-                ),
-                buildPieChartSection(
-                  title: 'Sản phẩm đã bán',
-                  dataList: widget.chartDataList[1].data.isNotEmpty
-                      ? widget.chartDataList[1].data
-                      : [],
-                  total: totalProductSold,
-                  sizePieChart: sizePieChart,
-                  sectionColors: [
-                    Colors.redAccent,
-                    Colors.cyanAccent,
-                    Colors.blue,
-                    Colors.deepOrangeAccent,
-                    Colors.pink,
-                    Colors.purpleAccent,
-                    Colors.orange,
-                  ],
-                ),
-                buildPieChartSection(
-                  title: 'Đơn hàng đã giao',
-                  dataList: widget.chartDataList[2].data.isNotEmpty
-                      ? widget.chartDataList[2].data
-                      : [],
-                  total: totalOrderDeliveried,
-                  sizePieChart: sizePieChart,
-                  sectionColors: [
-                    Colors.teal,
-                    Colors.greenAccent,
-                    Colors.blue,
-                    Colors.amber,
-                    Colors.pink,
-                    Colors.cyan,
-                    Colors.orange,
-                  ],
-                ),
-                buildPieChartSection(
-                  title: 'Lợi nhuận',
-                  dataList: widget.chartDataList[3].data.isNotEmpty
-                      ? widget.chartDataList[3].data
-                      : [],
-                  total: totalInterest,
-                  sizePieChart: sizePieChart,
-                  sectionColors: [
-                    Colors.deepPurple,
-                    Colors.indigo,
-                    Colors.deepOrange,
-                    Colors.lightGreen,
-                    Colors.purpleAccent,
-                  ],
-                ),
+                if (widget.chartDataList.length >= 4) ...[
+                  buildPieChartSection(
+                    title: 'Doanh thu',
+                    dataList: widget.chartDataList[0].data.isNotEmpty
+                        ? widget.chartDataList[0].data
+                        : [],
+                    total: totalRevenue,
+                    sizePieChart: sizePieChart,
+                    sectionColors: Colors.primaries,
+                  ),
+                  buildPieChartSection(
+                    title: 'Sản phẩm đã bán',
+                    dataList: widget.chartDataList[1].data.isNotEmpty
+                        ? widget.chartDataList[1].data
+                        : [],
+                    total: totalProductSold,
+                    sizePieChart: sizePieChart,
+                    sectionColors: [
+                      Colors.redAccent,
+                      Colors.cyanAccent,
+                      Colors.blue,
+                      Colors.deepOrangeAccent,
+                      Colors.pink,
+                      Colors.purpleAccent,
+                      Colors.orange,
+                    ],
+                  ),
+                  buildPieChartSection(
+                    title: 'Đơn hàng đã giao',
+                    dataList: widget.chartDataList[2].data.isNotEmpty
+                        ? widget.chartDataList[2].data
+                        : [],
+                    total: totalOrderDeliveried,
+                    sizePieChart: sizePieChart,
+                    sectionColors: [
+                      Colors.teal,
+                      Colors.greenAccent,
+                      Colors.blue,
+                      Colors.amber,
+                      Colors.pink,
+                      Colors.cyan,
+                      Colors.orange,
+                    ],
+                  ),
+                  buildPieChartSection(
+                    title: 'Lợi nhuận',
+                    dataList: widget.chartDataList[3].data.isNotEmpty
+                        ? widget.chartDataList[3].data
+                        : [],
+                    total: totalInterest,
+                    sizePieChart: sizePieChart,
+                    sectionColors: [
+                      Colors.deepPurple,
+                      Colors.indigo,
+                      Colors.deepOrange,
+                      Colors.lightGreen,
+                      Colors.purpleAccent,
+                    ],
+                  ),
+                ] else
+                  const Center(child: Text("Dữ liệu không đầy đủ")),
               ],
             ),
           ),

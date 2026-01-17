@@ -99,9 +99,18 @@ class _CartState extends State<Cart> {
     );
 
     // 3. Simulate payment processing
+    // Calculate additional metrics for revenue report
+    int totalProducts = 0;
+    for (var item in GlobalData.cartItemList) {
+      totalProducts += item.amount;
+    }
+    double currentProfit = GlobalData.cartItemList.length * tiencong;
+
     bool paymentSuccess = await _paymentService.processPayment(
       amount: total,
       orderId: orderItem.id,
+      productsCount: totalProducts,
+      profit: currentProfit,
     );
 
     // 4. Handle payment result

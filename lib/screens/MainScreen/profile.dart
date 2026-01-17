@@ -57,71 +57,75 @@ class _ProfileState extends State<Profile> {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
                   child: Column(
                     children: [
                       const SizedBox(height: 20),
 
                       /// --- 1. USER INFO CARD ---
-                      Stack(
-                        alignment: Alignment.center,
+                      Column(
                         children: [
-                          Column(
-                            children: [
-                              // Avatar Container
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: AppColors.primary, width: 3),
-                                  boxShadow: [
-                                    BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 15, offset: Offset(0, 5))
-                                  ]
-                                ),
-                                child: CircleAvatar(
-                                  radius: 50,
-                                  backgroundImage: AssetImage(GlobalData.userDetail.photoURL),
-                                ),
+                          // Avatar Container with Hero
+                          Hero(
+                            tag: 'profile_avatar',
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.primary, width: 3),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withOpacity(0.3), 
+                                    blurRadius: 20, 
+                                    offset: const Offset(0, 8)
+                                  )
+                                ]
                               ),
-                              const SizedBox(height: 16),
-                              
-                              // Name
-                              Text(
-                                GlobalData.userDetail.username,
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: textColor,
-                                ),
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundImage: AssetImage(GlobalData.userDetail.photoURL.isNotEmpty ? GlobalData.userDetail.photoURL : 'assets/images/default_avatar.png'),
+                                onBackgroundImageError: (_, __) {},
+                                backgroundColor: Colors.grey[200],
                               ),
-                              
-                              const SizedBox(height: 8),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          
+                          // Name
+                          Text(
+                            GlobalData.userDetail.username.isNotEmpty ? GlobalData.userDetail.username : "User",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 8),
 
-                              // Rank Badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: AppColors.primary.withOpacity(0.5))
+                          // Rank Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppColors.primary.withOpacity(0.5))
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset(imageRank, width: 20, height: 20, errorBuilder: (_,__,___) => const Icon(Icons.star, color: AppColors.primary, size: 20)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  GlobalData.userDetail.rank.isNotEmpty ? GlobalData.userDetail.rank : "Thành viên mới",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Image.asset(imageRank, width: 20, height: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      GlobalData.userDetail.rank,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -129,28 +133,47 @@ class _ProfileState extends State<Profile> {
                       const SizedBox(height: 40),
 
                       /// --- 2. MENU GROUP 1: CÁ NHÂN ---
-                      _buildSectionTitle("Cá nhân"),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: Offset(0, 4))
-                          ]
-                        ),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOutQuart,
+                        builder: (context, value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.translate(offset: Offset(0, 30 * (1 - value)), child: child)
+                          );
+                        },
                         child: Column(
                           children: [
-                            _buildMenuItem("Thông tin tài khoản", Icons.person_outline, () {
-                               Navigator.push(context, MaterialPageRoute(builder: (context) => UserInformation(isDark: widget.isDark, index: 2)));
-                            }),
-                            _buildDivider(),
-                            _buildMenuItem("Giỏ hàng của tôi", Icons.shopping_bag_outlined, () {
-                               Navigator.push(context, MaterialPageRoute(builder: (context) => Cart(isDark: widget.isDark, index: 2)));
-                            }),
-                             _buildDivider(),
-                            _buildMenuItem("Lịch sử đơn hàng", Icons.history, () {
-                               Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryOrder(isDark: widget.isDark, index: 2)));
-                            }),
+                            _buildSectionTitle("Cá nhân"),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                   BoxShadow(
+                                     color: AppColors.getShadow(widget.isDark).color, 
+                                     blurRadius: 15, 
+                                     offset: const Offset(0, 5)
+                                   )
+                                ]
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildMenuItem("Thông tin tài khoản", Icons.person_outline, () {
+                                     Navigator.push(context, MaterialPageRoute(builder: (context) => UserInformation(isDark: widget.isDark, index: 2)));
+                                  }),
+                                  _buildDivider(),
+                                  _buildMenuItem("Giỏ hàng của tôi", Icons.shopping_bag_outlined, () {
+                                     Navigator.push(context, MaterialPageRoute(builder: (context) => Cart(isDark: widget.isDark, index: 2)));
+                                  }),
+                                   _buildDivider(),
+                                  _buildMenuItem("Lịch sử đơn hàng", Icons.history, () {
+                                     Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryOrder(isDark: widget.isDark, index: 2)));
+                                  }),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -158,32 +181,51 @@ class _ProfileState extends State<Profile> {
                       const SizedBox(height: 25),
 
                       /// --- 3. MENU GROUP 2: ỨNG DỤNG ---
-                      _buildSectionTitle("Ứng dụng"),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: Offset(0, 4))
-                          ]
-                        ),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeOutQuart,
+                        builder: (context, value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.translate(offset: Offset(0, 30 * (1 - value)), child: child)
+                          );
+                        },
                         child: Column(
                           children: [
-                            _buildMenuItem("Cài đặt", Icons.settings_outlined, () {}),
-                            _buildDivider(),
-                            _buildMenuItem("Về chúng tôi", Icons.info_outline, () {}),
+                            _buildSectionTitle("Ứng dụng"),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                   BoxShadow(
+                                     color: AppColors.getShadow(widget.isDark).color, 
+                                     blurRadius: 15, 
+                                     offset: const Offset(0, 5)
+                                   )
+                                ]
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildMenuItem("Cài đặt", Icons.settings_outlined, () {}),
+                                  _buildDivider(),
+                                  _buildMenuItem("Về chúng tôi", Icons.info_outline, () {}),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 30),
 
                       /// --- 4. LOGOUT BUTTON ---
                       SizedBox(
                         width: double.infinity,
-                        child: TextButton.icon(
+                        height: 56,
+                        child: ElevatedButton.icon(
                           onPressed: () async {
-                            // Logout Logic
                              try {
                                 await FirebaseDBManager.authService.logout();
                                 GlobalData.userDetail = UserDetail(uid: "", username: "", email: "", password: "", photoURL: "", rank: "", point: 0, role: "");
@@ -192,15 +234,16 @@ class _ProfileState extends State<Profile> {
                                   (route) => false,
                                 );
                               } catch (e) {
-                                print(e);
+                                debugPrint(e.toString());
                               }
                           },
-                          icon: const Icon(Icons.logout, color: Colors.redAccent),
-                          label: const Text("Đăng xuất", style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold)),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Colors.redAccent.withOpacity(0.1),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          icon: const Icon(Icons.logout, color: Colors.white),
+                          label: const Text("Đăng xuất", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            elevation: 5,
+                            shadowColor: Colors.redAccent.withOpacity(0.4),
                           ),
                         ),
                       ),
@@ -220,16 +263,16 @@ class _ProfileState extends State<Profile> {
   // Widget tiêu đề nhóm
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 10, bottom: 10),
+      padding: const EdgeInsets.only(left: 10, bottom: 12),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          title,
+          title.toUpperCase(),
           style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1,
+            color: widget.isDark ? Colors.grey[400] : Colors.grey[600],
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
           ),
         ),
       ),
@@ -238,26 +281,42 @@ class _ProfileState extends State<Profile> {
 
   // Widget dòng menu
   Widget _buildMenuItem(String title, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10)
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+           child: Row(
+             children: [
+               Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12)
+                  ),
+                  child: Icon(icon, color: AppColors.primary, size: 22),
+               ),
+               const SizedBox(width: 16),
+               Expanded(
+                 child: Text(
+                  title, 
+                  style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600)
+                 ),
+               ),
+               Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey[400], size: 16),
+             ],
+           ),
         ),
-        child: Icon(icon, color: AppColors.primary, size: 22),
       ),
-      title: Text(
-        title, 
-        style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500)
-      ),
-      trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
-      onTap: onTap,
     );
   }
 
   Widget _buildDivider() {
-    return Divider(color: Colors.grey.withOpacity(0.1), height: 1, indent: 60, endIndent: 20);
+    return Padding(
+      padding: const EdgeInsets.only(left: 70, right: 20),
+      child: Divider(color: widget.isDark ? Colors.grey[800] : Colors.grey[100], height: 1),
+    );
   }
 }

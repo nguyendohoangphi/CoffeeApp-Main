@@ -1,11 +1,11 @@
 // ignore_for_file: prefer_const_constructors_in_immutables
-
 import 'package:flutter/material.dart';
 import 'package:coffeeapp/utils/executeratingdisplay.dart';
 import 'package:coffeeapp/models/product.dart';
 import 'package:coffeeapp/models/cartitem.dart';
 import 'package:coffeeapp/models/global_data.dart';
 import 'package:coffeeapp/screens/Product/product_detail.dart';
+import 'package:coffeeapp/constants/app_colors.dart';
 import 'package:intl/intl.dart';
 
 class ProductcardRecommended extends StatefulWidget {
@@ -31,221 +31,220 @@ class _ProductcardRecommendedState extends State<ProductcardRecommended> {
 
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    final cardColor = widget.isDark ? AppColors.cardDark : AppColors.cardLight;
+    final textColor = widget.isDark ? AppColors.textMainDark : AppColors.textMainLight;
+    final subTimeColor = widget.isDark ? AppColors.textSubDark : AppColors.textSubLight;
 
-    // if (widget.product.reviewCount < 61) {
-    //   return const SizedBox.shrink(); 
-    // }
-
-    final maxWidth = MediaQuery.of(context).size.width;
-    return Container(
-      margin: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: widget.isDark
-              ? [Colors.grey.shade800, Colors.grey.shade700]
-              : [Colors.blue.shade50, Colors.white],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 3,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth - 20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Ảnh sản phẩm
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProductDetail(
-                          isDark: widget.isDark,
-                          index: 0,
-                          product: widget.product,
-                          onFavoriteChanged: widget.onFavoriteChanged,
-                        ),
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      widget.product.imageUrl,
-                      height: 100,
-                      width: 100,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                // Phần giữa: tên + rating + giá
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProductDetail(
-                            isDark: widget.isDark,
-                            index: 0,
-                            product: widget.product,
-                            onFavoriteChanged: widget.onFavoriteChanged,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Tên sản phẩm (1 dòng, ellipsis)
-                        Text(
-                          widget.product.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        // Rating + review
-                        Row(
-                          children: [
-                            Executeratingdisplay(rate: widget.product.rating),
-                            const SizedBox(width: 4),
-                            // Text(
-                            //   '(${widget.product.reviewCount})',
-                            //   style: const TextStyle(
-                            //     fontSize: 12,
-                            //     color: Colors.grey,
-                            //   ),
-                            // ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 6),
-
-                        Text(
-                          '${format.format(widget.product.price)} đ',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // +
-                Center(
-                  child: IconButton(
-                    alignment: Alignment.centerRight,
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      maxWidth: 40,
-                      minHeight: 40,
-                      maxHeight: 40,
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: () {
-                      setState(() {
-                        CartItem cartItem = CartItem(
-                          productName: widget.product.name,
-                          amount: 1,
-                          size: SizeOption.Small,
-                          idOrder: '',
-                          product: widget.product,
-                        );
-
-                        int id = 0;
-                        while (GlobalData.cartItemList
-                            .where(
-                              (element) =>
-                                  element.productName.trim().toLowerCase() ==
-                                      cartItem.product.name
-                                          .trim()
-                                          .toLowerCase() &&
-                                  element.size == cartItem.size &&
-                                  element.id == id.toString(),
-                            )
-                            .isNotEmpty) {
-                          id++;
-                        }
-
-                        cartItem.id = id.toString();
-
-                        if (GlobalData.cartItemList
-                            .where(
-                              (element) =>
-                                  element.productName.trim().toLowerCase() ==
-                                      cartItem.product.name
-                                          .trim()
-                                          .toLowerCase() &&
-                                  element.size == cartItem.size,
-                            )
-                            .isNotEmpty) {
-                          GlobalData.cartItemList
-                              .firstWhere(
-                                (element) =>
-                                    element.productName.trim().toLowerCase() ==
-                                        cartItem.product.name
-                                            .trim()
-                                            .toLowerCase() &&
-                                    element.size == cartItem.size,
-                              )
-                              .amount += cartItem.amount;
-
-                          if (GlobalData.cartItemList
-                                  .firstWhere(
-                                    (element) =>
-                                        element.productName.trim().toLowerCase() ==
-                                        cartItem.product.name.trim().toLowerCase() &&
-                                        element.size == cartItem.size,
-                                  )
-                                  .amount >
-                              10) {
-                            GlobalData.cartItemList
-                                .firstWhere(
-                                  (element) =>
-                                      element.productName.trim().toLowerCase() ==
-                                          cartItem.product.name
-                                              .trim()
-                                              .toLowerCase() &&
-                                      element.size == cartItem.size,
-                                )
-                                .amount = 10;
-                          }
-                        } else {
-                          GlobalData.cartItemList.add(cartItem);
-                        }
-                      });
-                    },
-                    icon: const Icon(
-                      Icons.shopping_cart_rounded,
-                      color: Colors.yellow,
-                      size: 24.0,
-                      semanticLabel: 'Thêm vào giỏ hàng',
-                    ),
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetail(
+              isDark: widget.isDark,
+              index: 0,
+              product: widget.product,
+              onFavoriteChanged: widget.onFavoriteChanged,
             ),
           ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+             AppColors.getShadow(widget.isDark),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Image container with Hero animation
+            Hero(
+              tag: 'product_img_${widget.product.name}_${widget.index}',
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: widget.isDark ? Colors.grey[800] : Colors.grey[100],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: _buildProductImage(widget.product.imageUrl),
+                ),
+              ),
+            ),
+            
+            const SizedBox(width: 16),
+            
+            // Product Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    widget.product.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                    ) ?? TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  Row(
+                    children: [
+                      Executeratingdisplay(rate: widget.product.rating),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          '(${widget.product.reviewCount} đánh giá)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: subTimeColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: format.format(widget.product.price),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' đ',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary.withOpacity(0.8),
+                              ),
+                            ),
+                          ]
+                        )
+                      ),
+                      
+                      // Quick Add Button
+                      InkWell(
+                        onTap: _addToCart,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [AppColors.primary, AppColors.primaryDark],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            )
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildProductImage(String url) {
+    if (url.startsWith('http')) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_,__,___) => const Icon(Icons.broken_image, color: Colors.grey),
+      );
+    } else {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_,__,___) => const Icon(Icons.broken_image, color: Colors.grey),
+      );
+    }
+  }
+
+  void _addToCart() {
+    setState(() {
+      CartItem cartItem = CartItem(
+        productName: widget.product.name,
+        amount: 1,
+        size: SizeOption.Small,
+        idOrder: '',
+        product: widget.product,
+      );
+
+      var existingItem = GlobalData.cartItemList.indexWhere((element) =>
+          element.productName.trim().toLowerCase() == cartItem.productName.trim().toLowerCase() &&
+          element.size == cartItem.size);
+
+      if (existingItem != -1) {
+         if(GlobalData.cartItemList[existingItem].amount < 10){
+            GlobalData.cartItemList[existingItem].amount++;
+         }
+      } else {
+        cartItem.id = (GlobalData.cartItemList.length + 1).toString();
+        GlobalData.cartItemList.add(cartItem);
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Đã thêm ${widget.product.name} vào giỏ hàng"),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        )
+      );
+    });
   }
 }

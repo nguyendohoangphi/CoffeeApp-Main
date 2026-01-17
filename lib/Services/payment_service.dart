@@ -13,6 +13,8 @@ class PaymentService {
   Future<bool> processPayment({
     required double amount,
     required String orderId,
+    required int productsCount,
+    required double profit,
   }) async {
     try {
       if (kEnableStripeBackend) {
@@ -41,6 +43,8 @@ class PaymentService {
       await RevenueService.saveRevenue(
         amount: amount,
         orderId: orderId,
+        productsCount: productsCount,
+        profit: profit,
       );
 
       return true;
