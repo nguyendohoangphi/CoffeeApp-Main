@@ -14,6 +14,7 @@ class OrderItem {
   final String name;
   final String total;
   final String coupon;
+  final String note;
 
   final PaymentStatus paymentStatus;  
   final String? transactionId;  
@@ -31,6 +32,7 @@ class OrderItem {
     required this.cartItems,
     required this.total,
     required this.coupon,
+    this.note = '',
     this.paymentStatus = PaymentStatus.pending,  
     this.transactionId,  
     this.isMockPayment = false,  
@@ -48,6 +50,7 @@ class OrderItem {
     name: json['name'],
     total: json['total'],
     coupon: json['coupon'],
+    note: json['note'] ?? '',
   );
 
   Map<String, dynamic> toJson() => {
@@ -61,6 +64,7 @@ class OrderItem {
     'name': name,
     'total': total,
     'coupon': coupon,
+    'note': note,
   };
 }
 

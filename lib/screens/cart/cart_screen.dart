@@ -1,7 +1,6 @@
-// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously
+// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously, unnecessary_import, non_constant_identifier_names, deprecated_member_use
 
 import 'dart:ui';
-import 'package:coffeeapp/widgets/colorsetupbackground.dart';
 import 'package:coffeeapp/utils/generateCouponCode.dart';
 import 'package:coffeeapp/models/coupon.dart';
 import 'package:coffeeapp/services/firebase_db_manager.dart';
@@ -33,6 +32,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
   final TextEditingController _controllerPhone = TextEditingController();
   final TextEditingController _controllerName = TextEditingController();
   final TextEditingController _controllerDiscountCoupon = TextEditingController();
+  final TextEditingController _controllerNote = TextEditingController();
   String? _selectedTable = '';
   late List<TableStatus> _tableNumbers = []; 
   late final List<String> _coupons = [];
@@ -59,6 +59,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
     _controllerPhone.dispose();
     _controllerName.dispose();
     _controllerDiscountCoupon.dispose();
+    _controllerNote.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -143,6 +144,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
         _controllerPhone.text = '';
         _controllerName.text = '';
         _controllerDiscountCoupon.text = '';
+        _controllerNote.text = '';
         _selectedTable = '';
       });
 
@@ -457,14 +459,24 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                                   items: _tableNumbers.map((TableStatus value) {
                                     return DropdownMenuItem<String>(
                                       value: value.nameTable,
-                                      child: Text(value.nameTable),
+                                      child: Text(
+                                        value.nameTable,
+                                        style: TextStyle(color: widget.isDark ? Colors.white : Colors.black),
+                                      ),
                                     );
                                   }).toList(),
                                   decoration: _buildInputDecoration("Bàn", Icons.table_bar_rounded, widget.isDark),
-                                  hint: Text("-- Chọn bàn --", style: TextStyle(color: widget.isDark ? Colors.grey[400] : Colors.grey[600])),
-                                ),
-                              ],
-                            ),
+                                    hint: Text("-- Chọn bàn --", style: TextStyle(color: widget.isDark ? Colors.grey[400] : Colors.grey[600])),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _controllerNote,
+                                    style: TextStyle(color: widget.isDark ? Colors.white : Colors.black),
+                                    decoration: _buildInputDecoration("Ghi chú (ít đường, ít đá...)", Icons.note_alt_outlined, widget.isDark),
+                                    maxLines: 2,
+                                  ),
+                                ],
+                              ),
                           ),
 
                           const SizedBox(height: 24),
@@ -600,6 +612,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                       name: _controllerName.text,
                       total: total.toString(),
                       coupon: _controllerDiscountCoupon.text,
+                      note: _controllerNote.text,
                   );
                  
                   Buy(orderItem, _tableNumbers.firstWhere((e) => e.nameTable == _selectedTable).id);

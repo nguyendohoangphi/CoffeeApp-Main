@@ -6,12 +6,82 @@ import 'package:coffeeapp/services/firebase_db_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class RevenueDashboardPage extends StatelessWidget {
+class RevenueDashboardPage extends StatefulWidget {
   const RevenueDashboardPage({super.key});
+
+  @override
+  State<RevenueDashboardPage> createState() => _RevenueDashboardPageState();
+}
+
+class _RevenueDashboardPageState extends State<RevenueDashboardPage> {
+  DateTime _selectedDate = DateTime.now();
+
+  Future<void> _selectMonth(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      helpText: 'Chọn tháng',
+      fieldLabelText: 'Nhập ngày trong tháng mong muốn',
+      fieldHintText: 'dd/MM/yyyy',
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryColor,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  // Pre-process data to ensure every day of the month has a value (even if 0)
+  List<Revenue> _prepareDailyData(List<Revenue> fetchedData, DateTime monthDate) {
+    // Determine days in month
+    int daysInMonth = DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
+    List<Revenue> fullMonthData = [];
+
+    for (int i = 1; i <= daysInMonth; i++) {
+        String dayStr = "$i".padLeft(2, '0');
+        // Construct the date string matching the format stored in Firestore (yyyy-MM-dd)
+        String dateKey = "${monthDate.year}-${monthDate.month.toString().padLeft(2, '0')}-$dayStr";
+        
+        // Find existing data for this day
+        // Revenue.fromFirestore converts everything to "dd/MM/yyyy" format
+        // So we should match against that.
+        String displayDate = "$dayStr/${monthDate.month.toString().padLeft(2, '0')}/${monthDate.year}";
+
+        var daily = fetchedData.firstWhere(
+            (r) => r.date == displayDate || r.date == dateKey, // Check both just in case
+            orElse: () => Revenue(
+                date: displayDate,
+                totalRevenue: 0,
+                totalOrders: 0,
+                orderIds: [],
+                productsSold: 0,
+                totalProfit: 0
+            ) 
+        );
+        fullMonthData.add(daily);
+    }
+    return fullMonthData;
+  }
 
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat("#,##0", "vi_VN");
+    final monthFormat = DateFormat("MM/yyyy");
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
@@ -23,9 +93,21 @@ class RevenueDashboardPage extends StatelessWidget {
         backgroundColor: AppColors.backgroundColor,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          TextButton.icon(
+            onPressed: () => _selectMonth(context),
+            icon: const Icon(Icons.calendar_month, color: AppColors.primaryColor),
+            label: Text(
+              monthFormat.format(_selectedDate),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.primaryColor),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: StreamBuilder<List<Revenue>>(
-        stream: FirebaseDBManager.revenueService.getRevenueStream(),
+        stream: FirebaseDBManager.revenueService.getMonthlyRevenueStream(_selectedDate),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -33,33 +115,14 @@ class RevenueDashboardPage extends StatelessWidget {
           if (snapshot.hasError) {
             return Center(child: Text("Đã xảy ra lỗi: ${snapshot.error}"));
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child:
-                  Text("Chưa có dữ liệu doanh thu.", style: TextStyle(fontSize: 16)),
-            );
-          }
+          
+          final rawRevenueDocs = snapshot.data ?? [];
+          final revenueDocs = _prepareDailyData(rawRevenueDocs, _selectedDate);
 
-          final revenueDocs = snapshot.data!;
-          // Sort data by date (assuming date is comparable string like YYYY-MM-DD or we trust the order.
-          // The current date format seems to be dd/MM/yyyy based on previous code.
-          // String comparison for dd/MM/yyyy is NOT correct for sorting.
-          // Ideally we should parse to DateTime.
-          revenueDocs.sort((a, b) {
-             try {
-               final dateA = DateFormat('dd/MM/yyyy').parse(a.date);
-               final dateB = DateFormat('dd/MM/yyyy').parse(b.date);
-               return dateA.compareTo(dateB);
-             } catch (e) {
-               return 0;
-             }
-          });
-          
-          
-          // Calculate summary metrics
+          // Calculate summary metrics from RAW data (only actual sales)
           double totalRevenue = 0;
           int totalOrders = 0;
-          for (var doc in revenueDocs) {
+          for (var doc in rawRevenueDocs) {
             totalRevenue += doc.totalRevenue;
             totalOrders += doc.totalOrders;
           }
@@ -75,7 +138,7 @@ class RevenueDashboardPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: AdminSummaryCard(
-                        title: "Tổng doanh thu",
+                        title: "Doanh thu tháng",
                         value: "${currencyFormat.format(totalRevenue)} đ",
                         icon: Icons.monetization_on,
                         iconColor: Colors.green,
@@ -94,7 +157,7 @@ class RevenueDashboardPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 AdminSummaryCard(
-                  title: "Giá trị trung bình / đơn",
+                  title: "Trung bình / đơn",
                   value: "${currencyFormat.format(avgOrderValue)} đ",
                   icon: Icons.analytics,
                   iconColor: Colors.blue,
@@ -103,27 +166,42 @@ class RevenueDashboardPage extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Chart Section
+                Text(
+                   "Biểu đồ ngày trong tháng ${monthFormat.format(_selectedDate)}",
+                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                ),
+                const SizedBox(height: 10),
                 RevenueChart(revenueData: revenueDocs),
 
                 const SizedBox(height: 24),
-                const Text(
-                  "Lịch sử chi tiết",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Poppins',
-                  ),
+                
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Chi tiết ngày có đơn",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                     if (rawRevenueDocs.isEmpty)
+                        const Text("(Không có dữ liệu)", style: TextStyle(color: Colors.grey))
+                  ],
                 ),
+                
                 const SizedBox(height: 12),
 
-                // Recent Transactions List (Reverse order to show newest first)
+                // Recent Transactions List (Only show days with data)
+                // Reverse to show latest dates first
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: revenueDocs.length,
+                  itemCount: rawRevenueDocs.length,
                   itemBuilder: (context, index) {
-                    // Show newest first
-                    final dailyRevenue = revenueDocs[revenueDocs.length - 1 - index];
+                    final dailyRevenue = rawRevenueDocs[rawRevenueDocs.length - 1 - index];
+                    
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
@@ -148,11 +226,11 @@ class RevenueDashboardPage extends StatelessWidget {
                               color: AppColors.primaryColor, size: 20),
                         ),
                         title: Text(
-                          dailyRevenue.date,
+                          dailyRevenue.date, // This is already formatted as dd/MM/yyyy from model
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         subtitle: Text(
-                          "${dailyRevenue.totalOrders} đơn hàng",
+                          "${dailyRevenue.totalOrders} đơn hàng - ${dailyRevenue.productsSold} sản phẩm",
                           style: TextStyle(color: Colors.grey.shade600),
                         ),
                         trailing: Text(
@@ -175,4 +253,3 @@ class RevenueDashboardPage extends StatelessWidget {
     );
   }
 }
-

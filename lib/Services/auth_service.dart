@@ -84,10 +84,10 @@ class AuthService {
   //UPDATE POINT + RANK
   Future<void> updateUserPointAndRank(
       String uid, int point, String rank) async {
-    await _users.doc(uid).update({
+    await _users.doc(uid).set({
       "point": point,
       "rank": rank,
-    });
+    }, SetOptions(merge: true));
   }
 
   //UPDATE PASSWORD (Firebase Auth)

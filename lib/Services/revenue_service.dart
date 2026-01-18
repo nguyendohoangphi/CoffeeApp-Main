@@ -75,4 +75,21 @@ class RevenueService {
 
     return snapshot.docs.map((doc) => Revenue.fromFirestore(doc)).toList();
   }
+
+  /// Provides a stream of daily revenue for a specific month
+  Stream<List<Revenue>> getMonthlyRevenueStream(DateTime date) {
+    // Determine start and end date strings for the query
+    // Format: yyyy-MM-01 to yyyy-MM-31
+    final start = '${date.year}-${date.month.toString().padLeft(2, '0')}-01';
+    final end = '${date.year}-${date.month.toString().padLeft(2, '0')}-31';
+
+    return _firestore
+        .collection('revenue')
+        .where(FieldPath.documentId, isGreaterThanOrEqualTo: start)
+        .where(FieldPath.documentId, isLessThanOrEqualTo: end)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => Revenue.fromFirestore(doc)).toList();
+    });
+  }
 }

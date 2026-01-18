@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names, deprecated_member_use
+
 import 'dart:ui';
 import 'package:animate_gradient/animate_gradient.dart';
 import 'package:coffeeapp/models/cartitem.dart';

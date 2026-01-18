@@ -47,11 +47,14 @@ class _CartState extends State<Cart> {
     _controllerPhone.text = GlobalData.userDetail.phone ?? '';
   }
 
+  final TextEditingController _controllerNote = TextEditingController();
+
   @override
   void dispose() {
     _controllerPhone.dispose();
     _controllerName.dispose();
     _controllerDiscountCoupon.dispose();
+    _controllerNote.dispose();
     super.dispose();
   }
 
@@ -96,7 +99,9 @@ class _CartState extends State<Cart> {
       name: _controllerName.text,
       total: total.toString(),
       coupon: _controllerDiscountCoupon.text,
+      note: _controllerNote.text,
     );
+
 
     // 3. Simulate payment processing
     // Calculate additional metrics for revenue report
@@ -131,7 +136,13 @@ class _CartState extends State<Cart> {
         // 4b. Update user points and rank (previously in Buy method)
         await _updateUserPointsAndRank();
 
-        // 4c. Clear cart and reset state
+        // 4c. Update table status to booked
+        if (_tableNumbers.any((t) => t.nameTable == _selectedTable)) {
+           String tableId = _tableNumbers.firstWhere((t) => t.nameTable == _selectedTable).id;
+           await FirebaseDBManager.tableStatusService.updateBookingStatus(tableId, true);
+        }
+
+        // 4d. Clear cart and reset state
         setState(() {
           GlobalData.cartItemList.clear();
           _controllerDiscountCoupon.text = '';
@@ -460,10 +471,15 @@ class _CartState extends State<Cart> {
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: _selectedTable,
+                  dropdownColor: cardColor,
+                  style: TextStyle(color: textColor),
                   onChanged: (String? newValue) => setState(() => _selectedTable = newValue!),
                   items: [
-                    const DropdownMenuItem<String>(value: '', child: Text("--Chọn bàn--")),
-                    ..._tableNumbers.map((TableStatus value) => DropdownMenuItem<String>(value: value.nameTable, child: Text(value.nameTable))),
+                    DropdownMenuItem<String>(value: '', child: Text("--Chọn bàn--", style: TextStyle(color: textColor))),
+                    ..._tableNumbers.map((TableStatus value) => DropdownMenuItem<String>(
+                      value: value.nameTable,
+                      child: Text(value.nameTable, style: TextStyle(color: textColor)),
+                    )),
                   ],
                   decoration: InputDecoration(
                     labelText: "Bàn",
@@ -471,6 +487,21 @@ class _CartState extends State<Cart> {
                     fillColor: cardColor,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                     prefixIcon: const Icon(Icons.table_bar_rounded, color: AppColors.primary),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _controllerNote,
+                  style: TextStyle(color: textColor),
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    hintText: "Ghi chú (ít đường, ít đá...)",
+                    labelText: "Ghi chú",
+                    labelStyle: TextStyle(color: subTextColor),
+                    filled: true,
+                    fillColor: cardColor,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                    prefixIcon: const Icon(Icons.note_alt_outlined, color: AppColors.primary),
                   ),
                 ),
                 const SizedBox(height: 24),

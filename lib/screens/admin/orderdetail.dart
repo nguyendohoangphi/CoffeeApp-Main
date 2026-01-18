@@ -58,6 +58,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             Text("📧 Email: ${order.email}"),
             Text("📞 SĐT: ${order.phone}"),
             Text("🪑 Bàn: ${order.table}"),
+            Text("📝 Ghi chú: ${order.note.isEmpty ? 'Không có' : order.note}"),
             const SizedBox(height: 8),
             Row(
               children: [

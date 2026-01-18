@@ -24,32 +24,26 @@ class OrderService {
     final DocumentReference revenueRef = _revenueRef.doc(todayDocId);
 
     return firestore.runTransaction((transaction) async {
-      final DocumentSnapshot revenueSnapshot = await transaction.get(revenueRef);
+       double orderTotal = double.tryParse(order.total) ?? 0.0;
 
-      double orderTotal = double.tryParse(order.total) ?? 0.0;
+       // We don't strictly need to read if we only use FieldValue transforms with set merge,
+       // BUT for a transaction to be atomic on the specific doc, a read is good practice 
+       // to lock it, even if we ignore the result for logic branching. 
+       // However, to simply fix 'not-found', we can rely on set merge.
+       // Note: FieldValue.increment works with set merge on non-existing docs (treats missing as 0).
 
-      if (!revenueSnapshot.exists) {
-        // If the revenue document for today doesn't exist, create it.
-        transaction.set(revenueRef, {
-          'totalRevenue': orderTotal,
-          'totalOrders': 1,
-          'orderIds': [order.id],
-          'date': Timestamp.now(), // Optional: store the full date for sorting
-        });
-      } else {
-        // If it exists, update it.
-        transaction.update(revenueRef, {
-          'totalRevenue': FieldValue.increment(orderTotal),
-          'totalOrders': FieldValue.increment(1),
-          'orderIds': FieldValue.arrayUnion([order.id]),
-        });
-      }
+      transaction.set(revenueRef, {
+        'totalRevenue': FieldValue.increment(orderTotal),
+        'totalOrders': FieldValue.increment(1),
+        'orderIds': FieldValue.arrayUnion([order.id]),
+        'date': Timestamp.now(), // Ensures date field is present
+      }, SetOptions(merge: true));
 
       // Finally, set the order document itself.
       transaction.set(orderRef, order.toJson());
     }).catchError((error) {
       print("Transaction failed: $error");
-      throw Exception("Failed to place order. Please try again.");
+      throw Exception("Failed to place order. Please try again. Error: $error");
     });
   }
 

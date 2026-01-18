@@ -11,19 +11,14 @@ class RevenueChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Chỉ lấy tối đa 7 ngày gần nhất để hiển thị
-    final displayData = revenueData.length > 7
-        ? revenueData.sublist(revenueData.length - 7)
-        : revenueData;
-
-    // Tìm giá trị lớn nhất để scale biểu đồ
+    // Determine max Y for scaling
     double maxY = 0;
-    for (var r in displayData) {
+    for (var r in revenueData) {
       if (r.totalRevenue > maxY) maxY = r.totalRevenue;
     }
-    // Thêm khoảng đệm cho maxY (e.g. + 20%)
+    // Add buffering
     maxY = maxY * 1.2;
-    if (maxY == 0) maxY = 100000; // Default nếu chưa có data
+    if (maxY == 0) maxY = 100000;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -42,7 +37,7 @@ class RevenueChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Biểu đồ Doanh thu (7 ngày)",
+            "Biểu đồ Doanh thu",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -79,12 +74,20 @@ class RevenueChart extends StatelessWidget {
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
-                        if (index < 0 || index >= displayData.length) {
+                        if (index < 0 || index >= revenueData.length) {
                           return const SizedBox.shrink();
                         }
-                        // Giả sử date format là dd/MM/yyyy, lấy phần ngày dd
-                        final dateStr = displayData[index].date;
+                        
+                        final dateStr = revenueData[index].date;
+                        // Assuming date format is dd/MM/yyyy
                         String day = dateStr.split('/')[0];
+                        
+                        // Only show specific days to avoid clutter if many days
+                        // e.g., show every 3rd day if full month
+                        if (revenueData.length > 20 && index % 3 != 0) {
+                           return const SizedBox.shrink();
+                        }
+
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Text(
@@ -92,7 +95,7 @@ class RevenueChart extends StatelessWidget {
                             style: const TextStyle(
                               color: Colors.grey,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 10,
                             ),
                           ),
                         );
@@ -101,7 +104,7 @@ class RevenueChart extends StatelessWidget {
                     ),
                   ),
                   leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false), // Ẩn cột Y bên trái cho gọn
+                    sideTitles: SideTitles(showTitles: false),
                   ),
                   topTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -122,7 +125,7 @@ class RevenueChart extends StatelessWidget {
                   },
                 ),
                 borderData: FlBorderData(show: false),
-                barGroups: displayData.asMap().entries.map((e) {
+                barGroups: revenueData.asMap().entries.map((e) {
                   final index = e.key;
                   final data = e.value;
                   return BarChartGroupData(
@@ -131,10 +134,10 @@ class RevenueChart extends StatelessWidget {
                       BarChartRodData(
                         toY: data.totalRevenue,
                         color: AppColors.primaryColor,
-                        width: 16,
+                        width: 6, // Thinner bars to fit 31 days
                         borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(6),
-                          topRight: Radius.circular(6),
+                          topLeft: Radius.circular(2),
+                          topRight: Radius.circular(2),
                         ),
                         backDrawRodData: BackgroundBarChartRodData(
                           show: true,

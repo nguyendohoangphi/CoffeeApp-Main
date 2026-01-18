@@ -1,6 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:coffeeapp/constants/app_colors.dart';
 import 'package:coffeeapp/services/firebase_db_manager.dart';
-import 'package:coffeeapp/models/product.dart';
+//import 'package:coffeeapp/models/product.dart';
 import 'package:flutter/material.dart';
 
 class HomeSearchBar extends StatelessWidget {
